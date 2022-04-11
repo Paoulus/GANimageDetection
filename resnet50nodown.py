@@ -83,7 +83,9 @@ class ResNet(nn.Module):
     def __init__(self, block, layers, num_classes=1, stride0=2):
         super(ResNet, self).__init__()
         self.inplanes = 64
-        
+
+        self.block = block
+
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=stride0, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
@@ -193,6 +195,9 @@ class ResNet(nn.Module):
         
         return logit
 
+    def resetLastLayer(self):
+        self.layer4 = self._make_layer(self.block, 512, 3, stride=2)
+
 def resnet50nodown(device, filename, num_classes=1):
     """Constructs a ResNet-50 nodown model.
     """
@@ -200,5 +205,3 @@ def resnet50nodown(device, filename, num_classes=1):
     model.load_state_dict(torch.load(filename, map_location=torch.device('cpu'))['model'])
     model = model.to(device).eval()
     return model
-
-
