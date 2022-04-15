@@ -195,9 +195,6 @@ class ResNet(nn.Module):
         
         return logit
 
-    def resetLastLayer(self):
-        self.layer4 = self._make_layer(self.block, 512, 3, stride=2)
-
 def resnet50nodown(device, filename, num_classes=1):
     """Constructs a ResNet-50 nodown model.
     """

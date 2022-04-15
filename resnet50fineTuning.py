@@ -9,11 +9,13 @@ from resnet50nodown import *
 from PIL import Image
 
 def train_loop(dataloader, model, loss_fn, optimizer):
+    model.train()
     for index in range(len(dataloader)):
         # Compute prediction and loss
         image = dataloader[index]["image"]
         print(image)
-        pred = model.apply(image)
+        pred = torch.as_tensor(model.apply(image))
+        y = torch.tensor([-0.7,0],dtype=torch.float64) if dataloader[index]["label"] == "fake" else torch.tensor([0,-0.6],dtype=torch.float64)
         loss = loss_fn(pred, y)
 
         # Backpropagation
@@ -27,7 +29,7 @@ def train_loop(dataloader, model, loss_fn, optimizer):
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
             return
 
-class FFTHDatabase(datasets.DatasetFolder):
+class TuningDatabase(datasets.DatasetFolder):
     def __init__(self,path):
         self.classes = ["real","fake"]
         self.file_names = [os.path.join(path,file_name) for file_name in os.listdir(path)]
@@ -62,11 +64,11 @@ def make_layer(self, block, planes, blocks, stride=1):
 
 # return a fine-tuned version of the original resnet50 model
 def resnet50fineTuning(model,training_set_path):
-    model.resetLastLayer()
+    model = model.change_output(2)
     optimizer = optim.Adam(model.parameters(),lr=0.0001)     
     loss_fn = nn.CrossEntropyLoss()
 
-    data = FFTHDatabase(training_set_path)
+    data = TuningDatabase(training_set_path)
 
     train_loop(data,model,loss_fn,optimizer)
 

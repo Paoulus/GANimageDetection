@@ -47,6 +47,7 @@ if __name__ == '__main__':
         sum([glob.glob(os.path.join(input_folder, '*.' + x)) for x in ['jpg', 'JPG', 'jpeg', 'JPEG', 'png', 'PNG']],
             list()))
     num_files = len(list_files)
+    print(f"Training on {list_files}")
     fine_tuned = resnet50fineTuning(net,"example_images")
 
 """    
