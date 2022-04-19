@@ -22,7 +22,7 @@ from resnet50fineTuning import resnet50fineTuning
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
-        description="This script tests the network on an image folder and collects the results in a CSV file.",
+        description="This script fine-tunes the original resnet50 model from GANimageDetection.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--weights_path', '-m', type=str, default='./weights/gandetection_resnet50nodown_stylegan2.pth',
                         help='weights path of the network')
@@ -36,8 +36,7 @@ if __name__ == '__main__':
 
     from torch.cuda import is_available as is_available_cuda
 
-    #    device = 'cuda:0' if is_available_cuda() else 'cpu'
-    device = 'cpu'
+    device = 'cuda:0' if is_available_cuda() else 'cpu'
     net = resnet50nodown(device, weights_path)
 
     if output_csv is None:
@@ -48,23 +47,7 @@ if __name__ == '__main__':
             list()))
     num_files = len(list_files)
     print(f"Training on {list_files}")
-    fine_tuned = resnet50fineTuning(net,"example_images")
-
-"""    
-    print('GAN IMAGE DETECTION')
-    print('START')
-    with open(output_csv,'w') as fid:
-        fid.write('filename,logit,time\n')
-        fid.flush()
-        for index, filename in enumerate(list_files):
-            print('%5d/%d'%(index, num_files), end='\r')
-            tic = time.time()
-            img = Image.open(filename).convert('RGB')
-            img.load()
-            logit = net.apply(img)
-            toc = time.time()
-            
-            fid.write('%s,%f,%f\n' %(filename, logit, toc-tic))
-            fid.flush()
-"""
-print('\nDONE')
+    fine_tuned_model = resnet50fineTuning(net,"example_images")
+    # print(f"Saving fine-tuned model")
+    # torch.save(fine_tuned_model.state_dict(),"trained_model_weights.pth")
+    print('\nDONE')
