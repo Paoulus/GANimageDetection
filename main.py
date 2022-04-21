@@ -17,7 +17,9 @@ import time
 import argparse
 from PIL import Image
 from resnet50nodown import resnet50nodown
-from resnet50fineTuning import resnet50fineTuning
+from resnet50fineTuning import resnet50fineTune
+from resnet50fineTuning import TuningDatabase
+from torch import save as save_model
 
 if __name__ == '__main__':
 
@@ -29,25 +31,35 @@ if __name__ == '__main__':
     parser.add_argument('--input_folder', '-i', type=str, default='./example_images',
                         help='input folder with PNG and JPEG images')
     parser.add_argument('--output_csv', '-o', type=str, default=None, help='output CSV file')
+    parser.add_argument('--device_to_use', '-d', type=str, default='cuda:0',
+                        help='device to use for fine tuning (values: cpu, cuda:0)')
+    parser.add_argument('--dry-run', help='just print the options, then exit', action="store_true")
     config = parser.parse_args()
     weights_path = config.weights_path
     input_folder = config.input_folder
     output_csv = config.output_csv
+    device_to_use = config.device_to_use
+    dry_run = config.dry_run
 
     from torch.cuda import is_available as is_available_cuda
 
-    device = 'cuda:0' if is_available_cuda() else 'cpu'
+    # fallback to CPU if CUDA is not available
+    device = device_to_use if is_available_cuda() else 'cpu'
+    print(f"Using device {device}")
     net = resnet50nodown(device, weights_path)
 
     if output_csv is None:
         output_csv = 'out.' + os.path.basename(input_folder) + '.csv'
 
-    list_files = sorted(
-        sum([glob.glob(os.path.join(input_folder, '*.' + x)) for x in ['jpg', 'JPG', 'jpeg', 'JPEG', 'png', 'PNG']],
-            list()))
-    num_files = len(list_files)
-    print(f"Training on {list_files}")
-    fine_tuned_model = resnet50fineTuning(net,"example_images")
-    # print(f"Saving fine-tuned model")
-    # torch.save(fine_tuned_model.state_dict(),"trained_model_weights.pth")
-    print('\nDONE')
+    database = TuningDatabase(input_folder)
+
+    if not dry_run:
+        fine_tuned_model = resnet50fineTune(net, database)
+        print(f"Saving fine-tuned model")
+        save_model(fine_tuned_model.state_dict(), "trained_model_weights.pth")
+        print('DONE')
+    else:
+        print(f"Will use data in {input_folder}")
+        print(f"Model will be initialized with weights from {weights_path}")
+        print(f"Output will be written in {output_csv}")
+        print("Will save model in trained_model_weights.pth")
