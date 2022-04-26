@@ -59,13 +59,15 @@ class TuningDatabase(datasets.DatasetFolder):
             if entry == 'FFHQ':
                 for root, dirs, files in os.walk(data_folder):
                     for file in files:
-                        item = os.path.join(root, file), 0
-                        self.samples.append(item)
+                        if file.endswith(".png"):
+                            item = os.path.join(root, file), 0
+                            self.samples.append(item)
             if entry == 'styleGAN' or entry == 'StyleGAN2':
                 for root, dirs, files in os.walk(data_folder):
                     for file in files:
-                        item = os.path.join(root, file), 1
-                        self.samples.append(item)
+                        if file.endswith(".png"):
+                            item = os.path.join(root, file), 1
+                            self.samples.append(item)
 
     def __len__(self):
         return len(self.samples)
