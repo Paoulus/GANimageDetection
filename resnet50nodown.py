@@ -14,8 +14,10 @@
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-LIMIT_SIZE  = 1536
+
+LIMIT_SIZE = 1536
 LIMIT_SLIDE = 1024
+
 
 class ChannelLinear(nn.Linear):
 
@@ -24,21 +26,23 @@ class ChannelLinear(nn.Linear):
 
     def forward(self, x):
         out_shape = [x.shape[0], x.shape[2], x.shape[3], self.out_features]
-        x = x.permute(0,2,3,1).reshape(-1,self.in_features)
+        x = x.permute(0, 2, 3, 1).reshape(-1, self.in_features)
         x = x.matmul(self.weight.t())
         if self.bias is not None:
-            x = x + self.bias[None,:]
-        x = x.view(out_shape).permute(0,3,1,2)
+            x = x + self.bias[None, :]
+        x = x.view(out_shape).permute(0, 3, 1, 2)
         return x
 
-    
+
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, bias=False)
 
+
 def conv1x1(in_planes, out_planes, stride=1):
     """1x1 convolution"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
+
 
 class Bottleneck(nn.Module):
     expansion = 4
@@ -109,9 +113,7 @@ class ResNet(nn.Module):
         # transform form Pillow
         self.transform = transforms.Compose([transforms.ToTensor(),
                                              transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                             std=[0.229, 0.224, 0.225])])
-
-
+                                                                  std=[0.229, 0.224, 0.225])])
 
     def _make_layer(self, block, planes, blocks, stride=1):
         downsample = None
@@ -133,24 +135,24 @@ class ResNet(nn.Module):
         self.fc = ChannelLinear(self.num_features, num_classes)
         torch.nn.init.normal_(self.fc.weight.data, 0.0, 0.02)
         return self
-        
+
     def change_input(self, num_inputs):
         data = self.conv1.weight.data
         old_num_inputs = int(data.shape[1])
-        if num_inputs>old_num_inputs:
-            times = num_inputs//old_num_inputs
-            if (times*old_num_inputs)<num_inputs:
-                times = times+1
-            data = data.repeat(1,times,1,1) / times
-        elif num_inputs==old_num_inputs:
+        if num_inputs > old_num_inputs:
+            times = num_inputs // old_num_inputs
+            if (times * old_num_inputs) < num_inputs:
+                times = times + 1
+            data = data.repeat(1, times, 1, 1) / times
+        elif num_inputs == old_num_inputs:
             return self
-        
-        data = data[:,:num_inputs,:,:]
+
+        data = data[:, :num_inputs, :, :]
         print(self.conv1.weight.data.shape, '->', data.shape)
         self.conv1.weight.data = data
-        
+
         return self
-    
+
     def feature(self, x):
         x = self.conv1(x)
         x = self.bn1(x)
@@ -162,61 +164,62 @@ class ResNet(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
         return x
-    
+
     def forward(self, x):
         x = self.feature(x)
         x = self.avgpool(x)
         x = self.fc(x)
 
         return x
-            
+
     def apply(self, pil):
         device = self.conv1.weight.device
-        if (pil.size[0]>LIMIT_SIZE) and (pil.size[1]>LIMIT_SIZE):
+        if (pil.size[0] > LIMIT_SIZE) and (pil.size[1] > LIMIT_SIZE):
             import numpy as np
             print('err:', pil.size)
             with torch.no_grad():
                 img = self.transform(pil)
-                list_logit  = list()
+                list_logit = list()
                 list_weight = list()
                 for index0 in range(0, img.shape[-2], LIMIT_SLIDE):
                     for index1 in range(0, img.shape[-1], LIMIT_SLIDE):
-                        clip = img[..., index0:min(index0+LIMIT_SLIDE,  img.shape[-2]),
-                                        index1:min(index1+LIMIT_SLIDE,  img.shape[-1])]
-                        logit  = torch.squeeze(self(clip.to(device)[None,:,:,:])).cpu().numpy()
+                        clip = img[..., index0:min(index0 + LIMIT_SLIDE, img.shape[-2]),
+                               index1:min(index1 + LIMIT_SLIDE, img.shape[-1])]
+                        logit = torch.squeeze(self(clip.to(device)[None, :, :, :])).cpu().numpy()
                         weight = clip.shape[-2] * clip.shape[-1]
                         list_logit.append(logit)
                         list_weight.append(weight)
-            
+
             logit = np.mean(np.asarray(list_logit) * np.asarray(list_weight)) / np.mean(list_weight)
         else:
             with torch.no_grad():
-                logit = torch.squeeze(self(self.transform(pil).to(device)[None,:,:,:])).cpu().numpy()
-        
+                logit = torch.squeeze(self(self.transform(pil).to(device)[None, :, :, :])).cpu().numpy()
+
         return logit
 
     def evalutate_for_training(self, pil):
         device = self.conv1.weight.device
-        if (pil.size[0]>LIMIT_SIZE) and (pil.size[1]>LIMIT_SIZE):
+        if (pil.size[0] > LIMIT_SIZE) and (pil.size[1] > LIMIT_SIZE):
             import numpy as np
             print('err:', pil.size)
             img = self.transform(pil)
-            list_logit  = list()
+            list_logit = list()
             list_weight = list()
             for index0 in range(0, img.shape[-2], LIMIT_SLIDE):
                 for index1 in range(0, img.shape[-1], LIMIT_SLIDE):
-                    clip = img[..., index0:min(index0+LIMIT_SLIDE,  img.shape[-2]),
-                                    index1:min(index1+LIMIT_SLIDE,  img.shape[-1])]
-                    logit  = torch.squeeze(self(clip.to(device)[None,:,:,:])).cpu().numpy()
+                    clip = img[..., index0:min(index0 + LIMIT_SLIDE, img.shape[-2]),
+                           index1:min(index1 + LIMIT_SLIDE, img.shape[-1])]
+                    logit = torch.squeeze(self(clip.to(device)[None, :, :, :])).cpu().numpy()
                     weight = clip.shape[-2] * clip.shape[-1]
                     list_logit.append(logit)
                     list_weight.append(weight)
 
             logit = np.mean(np.asarray(list_logit) * np.asarray(list_weight)) / np.mean(list_weight)
         else:
-            logit = torch.squeeze(self(self.transform(pil).to(device)[None,:,:,:]))
+            logit = torch.squeeze(self(self.transform(pil).to(device)[None, :, :, :]))
 
         return logit
+
 
 def resnet50nodown(device, filename, num_classes=1):
     """Constructs a ResNet-50 nodown model.

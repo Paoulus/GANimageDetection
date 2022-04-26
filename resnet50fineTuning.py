@@ -7,21 +7,47 @@ import torchvision.transforms as transforms
 import os
 from resnet50nodown import *
 from PIL import Image
+import copy
 
+def train_loop(model, dataloader, loss_fn, optimizer, device, images_to_use=None, epochs = 5):
+    best_model_wts = copy.deepcopy(model.state_dict())
+    val_loss_history = []
 
-def train_loop(model, dataloader, loss_fn, optimizer, images_to_use=None):
-    maximum = len(dataloader) if images_to_use is None else images_to_use;
-    for index in range(0, maximum):
-        # Compute prediction and loss
-        image, target = dataloader[index]
-        pred = model.evalutate_for_training(image)
-        y = torch.tensor(-1.0) if target == 0 else torch.tensor(1.0)
-        loss = loss_fn(pred, y)
+    for epoch in range(epochs):
+        # Each epoch has a training and validation phase
+        for phase in ['train', 'val']:
+            if phase == 'train':
+                model.train()  # Set model to training mode
+            else:
+                model.eval()   # Set model to evaluate mode
 
-        # Backpropagation
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+            running_loss = 0.0
+            maximum = len(dataloader[phase]) if images_to_use is None else images_to_use;
+
+            for index in range(0, maximum):
+                # Compute prediction and loss
+                with torch.set_grad_enabled(phase == 'train'):
+                    optimizer.zero_grad()
+
+                    image, target = dataloader[phase][index]
+                    pred = model.evalutate_for_training(image)
+                    y = torch.tensor(-1.0) if target == 0 else torch.tensor(1.0)
+                    y = y.to(device)
+                    loss = loss_fn(pred, y)
+
+                    if phase == 'train':
+                        loss.backward()
+                        optimizer.step()
+
+                    running_loss += loss.item()
+
+                epoch_loss = running_loss / len(dataloader)
+
+                if phase == 'val':
+                    val_loss_history.append(epoch_loss)
+
+    model.load_state_dict(best_model_wts)
+    return val_loss_history
 
 
 class TuningDatabase(datasets.DatasetFolder):
@@ -55,14 +81,17 @@ class TuningDatabase(datasets.DatasetFolder):
 
 
 # return a fine-tuned version of the original resnet50 model
-def resnet50fineTune(model, database):
+def resnet50fineTune(model, database,device):
     # TODO: keep track of running loss?
-    model = model.change_output(1)
-
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
     loss_fn = nn.BCEWithLogitsLoss()
 
-    model.train()
-    train_loop(model, database, loss_fn, optimizer, 1)
+    for param in model.parameters():
+        param.requires_grad = False;
 
-    return model
+    model = model.change_output(1)
+    model.to(device)
+
+    validation_history = train_loop(model, database, loss_fn, optimizer, device,images_to_use=3)
+
+    return model, validation_history
