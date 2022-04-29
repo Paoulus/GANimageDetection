@@ -21,6 +21,7 @@ from resnet50fineTuning import resnet50fineTune
 from resnet50fineTuning import TuningDatabase
 from torch import save as save_model
 from torch import utils
+import csv
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -63,10 +64,17 @@ databases = {
 }
 
 if not dry_run:
-    fine_tuned_model, validation_history = resnet50fineTune(starting_model, databases, device)
+    fine_tuned_model, accuracy_history = resnet50fineTune(starting_model, databases, device)
     print(f"Saving fine-tuned model")
     save_model(fine_tuned_model.state_dict(), "trained_model_weights.pth")
-    print(validation_history)
+    
+    with open("validation_accuracy_history.csv","w",newline="") as csvfile:
+        fieldnames = ["accuracy"]
+        writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows({"accuracy":x} for x in accuracy_history)
+
+    accuracy_history
     print('DONE')
 else:
     print(f"Will use data in {input_folder}")

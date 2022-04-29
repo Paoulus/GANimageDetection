@@ -1,5 +1,6 @@
 __pycache__
 .idea
 weights
-fake-dataset
+fake_dataset
 trained_model_weights.pth
+*.csv
