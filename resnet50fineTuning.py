@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
+from torch.utils.data import RandomSampler
 from torchvision import datasets
 from torch import optim
 import torchvision.transforms as transforms
@@ -27,7 +28,9 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, images_to_use=None
             incorrect_prediction = 0
             maximum = len(dataloader[phase]) if images_to_use is None else images_to_use;
 
-            for index in range(0, maximum):
+            random_sampler = RandomSampler(dataloader[phase],replacement=True,num_samples=images_to_use)
+
+            for index in random_sampler:
                 # Compute prediction and loss
                 with torch.set_grad_enabled(phase == 'train'):
                     optimizer.zero_grad()
@@ -46,8 +49,8 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, images_to_use=None
                     if (y.item() < 0 and pred.item() < 0) or (y.item() > 0 and pred.item() > 0):
                         correct_prediction += 1
 
-            epoch_loss = running_loss / len(dataloader)
-            epoch_acc = correct_prediction / len(dataloader)
+            epoch_loss = running_loss / len(dataloader[phase])
+            epoch_acc = correct_prediction / len(dataloader[phase])
 
             if phase == 'val':
                 val_loss_history.append(epoch_loss)
