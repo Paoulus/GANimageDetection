@@ -69,12 +69,12 @@ if not dry_run:
     save_model(fine_tuned_model.state_dict(), "trained_model_weights.pth")
     
     with open("validation_accuracy_history.csv","w",newline="") as csvfile:
-        fieldnames = ["accuracy"]
+        fieldnames = ["accuracy","epoch"]
         writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows({"accuracy":x} for x in accuracy_history)
+        for index in range(len(accuracy_history)):
+            writer.writerow({"accuracy":accuracy_history[index],"epoch":index})
 
-    accuracy_history
     print('DONE')
 else:
     print(f"Will use data in {input_folder}")

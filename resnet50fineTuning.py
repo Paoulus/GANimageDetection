@@ -24,6 +24,7 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, images_to_use=None
                 model.eval()   # Set model to evaluate mode
 
             running_loss = 0.0
+            best_acc = 0.0
             correct_prediction = 0
             incorrect_prediction = 0
             maximum = len(dataloader[phase]) if images_to_use is None else images_to_use;
@@ -55,6 +56,9 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, images_to_use=None
             if phase == 'val':
                 val_loss_history.append(epoch_loss)
                 epoch_acc_history.append(epoch_acc)
+            if phase == 'val' and epoch_acc > best_acc:
+                best_acc = epoch_acc
+                best_model_wts = copy.deepcopy(model.state_dict())
 
     model.load_state_dict(best_model_wts)
     return epoch_acc_history
@@ -104,6 +108,6 @@ def resnet50fineTune(model, database,device):
     model = model.change_output(1)
     model.to(device)
 
-    validation_history = train_loop(model, database, loss_fn, optimizer, device)
+    validation_history = train_loop(model, database, loss_fn, optimizer, device,images_to_use=4)
 
     return model, validation_history
