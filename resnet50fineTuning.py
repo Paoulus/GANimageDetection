@@ -9,6 +9,7 @@ import os
 from resnet50nodown import *
 from PIL import Image
 import copy
+import time
 
 def train_loop(model, dataloader, loss_fn, optimizer, device, images_to_use=None, epochs = 5):
     best_model_wts = copy.deepcopy(model.state_dict())
@@ -17,6 +18,7 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, images_to_use=None
 
     for epoch in range(epochs):
         # Each epoch has a training and validation phase
+        epoch_start_time = time.time()
         for phase in ['train', 'val']:
             if phase == 'train':
                 model.train()  # Set model to training mode
@@ -59,6 +61,18 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, images_to_use=None
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
+
+        # print epoch duration and estimated time to finish
+        epoch_end_time = time.time()
+        epoch_duration = epoch_end_time - epoch_start_time
+        remaining_epochs = epochs - epoch - 1
+        current_eta = epoch_duration * remaining_epochs
+        print('Epoch took {:.0f} minutes, {:.0f} seconds.'.format(
+                epoch_duration // 60,
+                epoch_duration % 60,))
+        if remaining_epochs > 0:
+            print('Estimated time to finish: {:.0f} minutes,{:.0f} seconds'.format(current_eta // 60,current_eta % 60))
+            print('--------------------')
 
     model.load_state_dict(best_model_wts)
     return epoch_acc_history
@@ -108,6 +122,10 @@ def resnet50fineTune(model, database,device):
     model = model.change_output(1)
     model.to(device)
 
-    validation_history = train_loop(model, database, loss_fn, optimizer, device,images_to_use=4)
+    for name,param in model.named_parameters():
+        if param.requires_grad == True:
+            print("\t",name)
+
+    validation_history = train_loop(model, database, loss_fn, optimizer, device,images_to_use=2,epochs = 5)
 
     return model, validation_history
