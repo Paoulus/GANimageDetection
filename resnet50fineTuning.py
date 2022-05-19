@@ -17,6 +17,8 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, images_to_use=None
     epoch_acc_history = []
 
     for epoch in range(epochs):
+        print('Epoch {}/{}'.format(epoch,epochs - 1))
+        print('-' * 10)
         # Each epoch has a training and validation phase
         epoch_start_time = time.time()
         for phase in ['train', 'val']:
@@ -122,10 +124,17 @@ def resnet50fineTune(model, database,device):
     model = model.change_output(1)
     model.to(device)
 
+    print("Training on parameters:")
     for name,param in model.named_parameters():
         if param.requires_grad == True:
             print("\t",name)
 
+    training_start = time.time()
     validation_history = train_loop(model, database, loss_fn, optimizer, device,images_to_use=2,epochs = 5)
+    training_end = time.time()
+    
+    train_min = (training_end - training_start) // 60
+    train_sec = (training_end - training_start) % 60
+    print("Training duration: {:.0f} min and {:.0f} seconds".format(train_min,train_sec))
 
     return model, validation_history
