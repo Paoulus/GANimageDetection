@@ -11,12 +11,12 @@ from PIL import Image
 import copy
 import time
 
-def train_loop(model, dataloader, loss_fn, optimizer, device, images_to_use=None, epochs = 5):
+def train_loop(model, dataloader, loss_fn, optimizer, device, starting_epoch,images_to_use=None, epochs = 5):
     best_model_wts = copy.deepcopy(model.state_dict())
     val_loss_history = []
     epoch_acc_history = []
 
-    for epoch in range(epochs):
+    for epoch in range(starting_epoch,epochs):
         print('Epoch {}/{}'.format(epoch,epochs - 1))
         print('-' * 10)
         # Each epoch has a training and validation phase
@@ -76,6 +76,20 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, images_to_use=None
             print('Estimated time to finish: {:.0f} minutes,{:.0f} seconds'.format(current_eta // 60,current_eta % 60))
             print('--------------------')
 
+        # at the end of the epoch, save the obtained model, so that we may be able to resume training if interrupted
+        PATH = f"./checkpoints/model_checkpoint_epoch.pt"
+        LOSS = 0.4
+
+        if not os.path.exists("./checkpoints/") :
+            os.makedirs("./checkpoints/")
+
+        torch.save({
+            'epoch': epoch + 1,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': LOSS,
+            }, PATH)
+
     model.load_state_dict(best_model_wts)
     return epoch_acc_history
 
@@ -113,10 +127,17 @@ class TuningDatabase(datasets.DatasetFolder):
 
 
 # return a fine-tuned version of the original resnet50 model
-def resnet50fineTune(model, database,device):
+def resnet50fineTune(model, database,device, resume_from_checkpoint=False):
     # TODO: keep track of running loss?
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
     loss_fn = nn.BCEWithLogitsLoss()
+
+    starting_epoch = 0
+    if resume_from_checkpoint:
+        checkpoint = torch.load("./checkpoints/model_checkpoint_epoch.pt")
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        starting_epoch = checkpoint['epoch']
 
     for param in model.parameters():
         param.requires_grad = False;
@@ -130,9 +151,9 @@ def resnet50fineTune(model, database,device):
             print("\t",name)
 
     training_start = time.time()
-    validation_history = train_loop(model, database, loss_fn, optimizer, device,images_to_use=2,epochs = 5)
+    validation_history = train_loop(model, database, loss_fn, optimizer, device,starting_epoch,images_to_use=2,epochs = 5)
     training_end = time.time()
-    
+
     train_min = (training_end - training_start) // 60
     train_sec = (training_end - training_start) % 60
     print("Training duration: {:.0f} min and {:.0f} seconds".format(train_min,train_sec))

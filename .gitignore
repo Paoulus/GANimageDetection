@@ -4,3 +4,4 @@ weights
 fake_dataset
 trained_model_weights.pth
 *.csv
+checkpoints

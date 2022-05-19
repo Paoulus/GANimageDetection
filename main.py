@@ -36,7 +36,8 @@ if __name__ == '__main__':
 parser.add_argument('--output_csv', '-o', type=str, default=None, help='output CSV file')
 parser.add_argument('--device_to_use', '-d', type=str, default='cuda:0',
                     help='device to use for fine tuning (values: cpu, cuda:0)')
-parser.add_argument('--dry-run', help='just print the options, then exit', action="store_true")
+parser.add_argument('--dry-run', help='just print the selected options, then exit', action="store_true")
+parser.add_argument('--resume-from-checkpoint', help='resume from last checkpoint', action="store_true")
 config = parser.parse_args()
 weights_path = config.weights_path
 input_folder = config.input_folder
@@ -44,6 +45,7 @@ validation_folder = config.validation_folder
 output_csv = config.output_csv
 device_to_use = config.device_to_use
 dry_run = config.dry_run
+resume_from_checkpoint = config.resume_from_checkpoint
 
 if validation_folder == None:
     validation_folder = input_folder
@@ -64,7 +66,7 @@ databases = {
 }
 
 if not dry_run:
-    fine_tuned_model, accuracy_history = resnet50fineTune(starting_model, databases, device)
+    fine_tuned_model, accuracy_history = resnet50fineTune(starting_model, databases, device,resume_from_checkpoint)
     print(f"Saving fine-tuned model")
     save_model(fine_tuned_model.state_dict(), "trained_model_weights.pth")
     
