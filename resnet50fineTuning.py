@@ -151,7 +151,7 @@ def resnet50fineTune(model, database,device, resume_from_checkpoint=False):
             print("\t",name)
 
     training_start = time.time()
-    validation_history = train_loop(model, database, loss_fn, optimizer, device,starting_epoch,images_to_use=2,epochs = 5)
+    validation_history = train_loop(model, database, loss_fn, optimizer, device,starting_epoch,images_to_use=2,epochs = 2)
     training_end = time.time()
 
     train_min = (training_end - training_start) // 60
