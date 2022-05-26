@@ -197,30 +197,6 @@ class ResNet(nn.Module):
 
         return logit
 
-    def evalutate_for_training(self, pil):
-        device = self.conv1.weight.device
-        if (pil.size[0] > LIMIT_SIZE) and (pil.size[1] > LIMIT_SIZE):
-            import numpy as np
-            print('err:', pil.size)
-            img = self.transform(pil)
-            list_logit = list()
-            list_weight = list()
-            for index0 in range(0, img.shape[-2], LIMIT_SLIDE):
-                for index1 in range(0, img.shape[-1], LIMIT_SLIDE):
-                    clip = img[..., index0:min(index0 + LIMIT_SLIDE, img.shape[-2]),
-                           index1:min(index1 + LIMIT_SLIDE, img.shape[-1])]
-                    logit = torch.squeeze(self(clip.to(device)[None, :, :, :])).cpu().numpy()
-                    weight = clip.shape[-2] * clip.shape[-1]
-                    list_logit.append(logit)
-                    list_weight.append(weight)
-
-            logit = np.mean(np.asarray(list_logit) * np.asarray(list_weight)) / np.mean(list_weight)
-        else:
-            logit = torch.squeeze(self(self.transform(pil).to(device)[None, :, :, :]))
-
-        return logit
-
-
 def resnet50nodown(device, filename, num_classes=1):
     """Constructs a ResNet-50 nodown model.
     """

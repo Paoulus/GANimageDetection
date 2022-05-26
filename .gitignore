@@ -5,3 +5,6 @@ fake_dataset
 trained_model_weights.pth
 *.csv
 checkpoints
+DatasetFast
+nohup.out
+output.log

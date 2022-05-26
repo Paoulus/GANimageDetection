@@ -1,17 +1,5 @@
-import torch
-from torch import save as save_model
-import torch.nn as nn
-import torch.optim as optim
-import numpy as np
-import torchvision
-from torchvision import datasets, models, transforms
-import matplotlib.pyplot as plt
-import time
-import datetime
-import os
-import copy
 import argparse
-from resnet50nodown import *
+
 from resnet50fineTuning import *
 
 batch_size = 16
