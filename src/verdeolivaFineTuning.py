@@ -75,6 +75,7 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs,images_to_u
                 with torch.set_grad_enabled(phase == 'train'):
                     optimizer.zero_grad()
 
+                    image = image.to(device)
                     # apply model; we use the same snipped as the one in model.apply, but with grad_enabled since we want
                     # the gradient for backpropagation
                     pred = model(image).to(device)
@@ -86,6 +87,7 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs,images_to_u
                         for index in range(0,target.size()[0]):
                             target[index] = 1.0 if target[index] == 0 else -1.0
 
+                    target = target.to(device)
                     loss = loss_fn(pred_squeezed, target)
 
                     if phase == 'train':
