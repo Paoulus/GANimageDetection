@@ -15,6 +15,7 @@ import os
 import glob
 import time
 import argparse
+import json
 from PIL import Image
 from resnet50nodown import resnet50nodown
 from verdeolivaFineTuning import fineTune
@@ -26,12 +27,11 @@ from torch.cuda import is_available as is_available_cuda
 from torchvision import transforms
 import csv
 
-batch_size = 4
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="This script fine-tunes the original resnet50 model from GANimageDetection.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--config_path', '-c', type=str, default='config.json')
     parser.add_argument('--weights_path', '-m', type=str, default='./weights/gandetection_resnet50nodown_stylegan2.pth',
                         help='weights path of the network')
     parser.add_argument('--input_folder', '-i', type=str, default='./fake_dataset',
@@ -40,15 +40,19 @@ if __name__ == '__main__':
     parser.add_argument('--device_to_use', '-d', type=str, default='cuda:0',
                         help='device to use for fine tuning (values: cpu, cuda:0)')
     parser.add_argument('--dry-run', help='just print the selected options, then exit', action="store_true")
-    parser.add_argument('--resume-from-checkpoint', help='resume from last checkpoint', action="store_true")
     config = parser.parse_args()
     
+    # by default, use configuration in config.json
+    config_file = open(config.config_path,"r")
+    settings = json.loads(config_file.read())
+
     weights_path = config.weights_path
-    input_folder = config.input_folder
+    input_folder = settings["DatasetPath"]
     output_csv = config.output_csv
     device_to_use = config.device_to_use
     dry_run = config.dry_run
-    resume_from_checkpoint = config.resume_from_checkpoint
+    resume_from_checkpoint = settings["LoadCheckpoint"]
+    batch_size = settings["BatchSize"]
 
     if output_csv is None:
         output_csv = 'out.' + os.path.basename(input_folder) + '.csv'
@@ -73,7 +77,7 @@ if __name__ == '__main__':
         print(f"Using device {device}")
         
         starting_model = resnet50nodown(device, weights_path)
-        fine_tuned_model, accuracy_history = fineTune(starting_model, dataloaders, device, 2,resume_from_checkpoint)
+        fine_tuned_model, accuracy_history = fineTune(starting_model, dataloaders, device, settings["Epochs"],settings["Classes"],resume_from_checkpoint)
         
         print(f"Saving fine-tuned model")
         save_model(fine_tuned_model.state_dict(), "trained_model_weights.pth")

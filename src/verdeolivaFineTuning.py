@@ -12,7 +12,7 @@ from TuningDatabase import *
 
 # return a fine-tuned version of the original resnet50 model
 # by default num_classes is = 1, since it's specified like that in the original code
-def fineTune(model, database, device, num_classes=1, resume_from_checkpoint=False):
+def fineTune(model, database, device, epochs,num_classes=1, resume_from_checkpoint=False):
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
     if num_classes < 2 :
         loss_fn = nn.BCEWithLogitsLoss()
@@ -38,7 +38,7 @@ def fineTune(model, database, device, num_classes=1, resume_from_checkpoint=Fals
             print("\t",name)
 
     training_start = time.time()
-    validation_history = train_loop(model, database, loss_fn, optimizer, device,starting_epoch,images_to_use=2,epochs = 2)
+    validation_history = train_loop(model, database, loss_fn, optimizer, device, epochs, images_to_use=2)
     training_end = time.time()
 
     train_min = (training_end - training_start) // 60
@@ -48,14 +48,14 @@ def fineTune(model, database, device, num_classes=1, resume_from_checkpoint=Fals
     return model, validation_history
 
 
-def train_loop(model, dataloader, loss_fn, optimizer, device, starting_epoch,images_to_use=None, epochs = 5):
+def train_loop(model, dataloader, loss_fn, optimizer, device, epochs,images_to_use=None):
     best_model_wts = copy.deepcopy(model.state_dict())
     val_loss_history = []
     epoch_acc_history = []
     epoch_losses = []
     epoch_loss = 0
 
-    for epoch in range(starting_epoch,epochs):
+    for epoch in range(0,epochs):
         print('Epoch {}/{}'.format(epoch,epochs - 1))
         print('-' * 10)
         # Each epoch has a training and validation phase

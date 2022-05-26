@@ -1,0 +1,12 @@
+{
+    "Model": "resnet50nodown",
+    "CheckpointPath": "checkpoints/",
+    "DatasetPath": "./fake_dataset",
+    "LoadCheckpoint": false,
+    "Train": true,
+    "ImgChannels": 3,
+    "Classes": 2,
+    "LearningRate": 0.001,
+    "BatchSize": 2,
+    "Epochs": 1
+}
