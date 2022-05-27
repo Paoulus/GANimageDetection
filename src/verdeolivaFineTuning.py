@@ -12,8 +12,8 @@ from TuningDatabase import *
 
 # return a fine-tuned version of the original resnet50 model
 # by default num_classes is = 1, since it's specified like that in the original code
-def fineTune(model, database, device, epochs,num_classes=1, resume_from_checkpoint=False):
-    optimizer = optim.Adam(model.parameters(), lr=0.0001)
+def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resume_from_checkpoint=False, perform_validation = False):
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     if num_classes < 2 :
         loss_fn = nn.BCEWithLogitsLoss()
     else:
@@ -30,7 +30,7 @@ def fineTune(model, database, device, epochs,num_classes=1, resume_from_checkpoi
         param.requires_grad = False;
 
     model = model.change_output(num_classes)
-    model.to(device)
+    model = model.to(device)
 
     print("Training on parameters:")
     for name,param in model.named_parameters():
@@ -38,7 +38,7 @@ def fineTune(model, database, device, epochs,num_classes=1, resume_from_checkpoi
             print("\t",name)
 
     training_start = time.time()
-    validation_history = train_loop(model, database, loss_fn, optimizer, device, epochs, images_to_use=2)
+    validation_history = train_loop(model, database, loss_fn, optimizer, device, epochs, perform_validation, images_to_use=2)
     training_end = time.time()
 
     train_min = (training_end - training_start) // 60
@@ -48,7 +48,7 @@ def fineTune(model, database, device, epochs,num_classes=1, resume_from_checkpoi
     return model, validation_history
 
 
-def train_loop(model, dataloader, loss_fn, optimizer, device, epochs,images_to_use=None):
+def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_validation, images_to_use=None):
     best_model_wts = copy.deepcopy(model.state_dict())
     val_loss_history = []
     epoch_acc_history = []
@@ -66,12 +66,13 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs,images_to_u
             else:
                 model.eval()   # Set model to evaluate mode
 
-            correct_prediction = 0
-            if images_to_use is None:
-                images_to_use = len(dataloader[phase])
+            if (not perform_validation) and phase == 'val':
+                continue
 
+            batch_number = 0
             for image,target in dataloader[phase]:
-                # Compute prediction and loss
+                batch_number = batch_number + 1
+
                 with torch.set_grad_enabled(phase == 'train'):
                     optimizer.zero_grad()
 
@@ -87,14 +88,18 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs,images_to_u
                         for index in range(0,target.size()[0]):
                             target[index] = 1.0 if target[index] == 0 else -1.0
 
+                    predictions = pred_squeezed.argmax(dim=1, keepdim=True).squeeze()
+                    correct = (predictions == target).sum().item()
+                    accuracy = correct / image.size()[0]        # TODO: maybe a better way to know batch size? 
+
                     target = target.to(device)
                     loss = loss_fn(pred_squeezed, target)
+
+                    print("Epoch {}, Batch {} -- {}, Batch Accuracy: {:.4f}, Batch Loss: {:.4f}".format(epoch,batch_number,phase,accuracy,loss.item()))
 
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
-
-                    print(loss.item())
 
         # print epoch duration and estimated time to finish
         epoch_end_time = time.time()
@@ -106,7 +111,7 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs,images_to_u
                 epoch_duration % 60,))
         if remaining_epochs > 0:
             print('Estimated time to finish: {:.0f} minutes,{:.0f} seconds'.format(current_eta // 60,current_eta % 60))
-            print('--------------------')
+            print('-' * 10)
 
         # at the end of the epoch, save the obtained model, so that we may be able to resume training if interrupted
         PATH = f"./checkpoints/model_checkpoint_epoch.pt"

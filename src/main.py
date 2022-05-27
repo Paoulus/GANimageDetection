@@ -77,7 +77,7 @@ if __name__ == '__main__':
         print(f"Using device {device}")
         
         starting_model = resnet50nodown(device, weights_path)
-        fine_tuned_model, accuracy_history = fineTune(starting_model, dataloaders, device, settings["Epochs"],settings["Classes"],resume_from_checkpoint)
+        fine_tuned_model, accuracy_history = fineTune(starting_model, dataloaders, device, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"])
         
         print(f"Saving fine-tuned model")
         save_model(fine_tuned_model.state_dict(), "trained_model_weights.pth")

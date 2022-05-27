@@ -8,5 +8,6 @@
     "Classes": 2,
     "LearningRate": 0.001,
     "BatchSize": 2,
-    "Epochs": 1
+    "Epochs": 2,
+    "PerformValidation":false
 }
