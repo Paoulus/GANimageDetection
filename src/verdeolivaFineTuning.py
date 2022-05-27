@@ -87,12 +87,13 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
                         target = target.to(dtype=torch.float32)
                         for index in range(0,target.size()[0]):
                             target[index] = 1.0 if target[index] == 0 else -1.0
+                    
+                    target = target.to(device)
 
                     predictions = pred_squeezed.argmax(dim=1, keepdim=True).squeeze()
                     correct = (predictions == target).sum().item()
                     accuracy = correct / image.size()[0]        # TODO: maybe a better way to know batch size? 
 
-                    target = target.to(device)
                     loss = loss_fn(pred_squeezed, target)
 
                     print("Epoch {}, Batch {} -- {}, Batch Accuracy: {:.4f}, Batch Loss: {:.4f}".format(epoch,batch_number,phase,accuracy,loss.item()))

@@ -24,6 +24,7 @@ from torch import utils
 from torch import save as save_model
 from torch.utils.data import DataLoader
 from torch.cuda import is_available as is_available_cuda
+from torch.cuda import empty_cache
 from torchvision import transforms
 import csv
 
@@ -88,6 +89,8 @@ if __name__ == '__main__':
             writer.writeheader()
             for index in range(len(accuracy_history)):
                 writer.writerow({"accuracy":accuracy_history[index],"epoch":index})
+
+            empty_cache()
 
             print('DONE')
     else:
