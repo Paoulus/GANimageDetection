@@ -13,7 +13,6 @@ from TuningDatabase import *
 # return a fine-tuned version of the original resnet50 model
 # by default num_classes is = 1, since it's specified like that in the original code
 def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resume_from_checkpoint=False, perform_validation = False):
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     if num_classes < 2 :
         loss_fn = nn.BCEWithLogitsLoss()
     else:
@@ -31,6 +30,8 @@ def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resu
 
     model = model.change_output(num_classes)
     model = model.to(device)
+    
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     print("Training on parameters:")
     for name,param in model.named_parameters():

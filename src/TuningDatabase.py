@@ -5,6 +5,7 @@ from PIL import Image
 
 class TuningDatabase(datasets.DatasetFolder):
     def __init__(self, path,transform = None):
+        exclude = set(['code'])
         self.classes = ["real", "generated"]
         self.samples = []
         self.transform = transform
@@ -17,7 +18,8 @@ class TuningDatabase(datasets.DatasetFolder):
                             item = os.path.join(root, file), 0
                             self.samples.append(item)
             if entry == 'styleGAN' or entry == 'StyleGAN2':
-                for root, dirs, files in os.walk(data_folder):
+                for root, dirs, files in os.walk(data_folder, topdown=True):
+                    dirs[:] = [d for d in dirs if d not in exclude]
                     for file in files:
                         if file.endswith(".png"):
                             item = os.path.join(root, file), 1
