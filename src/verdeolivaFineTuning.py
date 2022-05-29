@@ -38,7 +38,7 @@ def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resu
             print("\t",name)
 
     training_start = time.time()
-    validation_history = train_loop(model, database, loss_fn, optimizer, device, epochs, perform_validation, images_to_use=2)
+    validation_history = train_loop(model, database, loss_fn, optimizer, device, epochs, perform_validation)
     training_end = time.time()
 
     train_min = (training_end - training_start) // 60
@@ -48,7 +48,7 @@ def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resu
     return model, validation_history
 
 
-def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_validation, images_to_use=None):
+def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_validation):
     best_model_wts = copy.deepcopy(model.state_dict())
     val_loss_history = []
     epoch_acc_history = []
@@ -69,6 +69,7 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
             if (not perform_validation) and phase == 'val':
                 continue
 
+            running_corrects = 0
             batch_number = 0
             for image,target in dataloader[phase]:
                 batch_number = batch_number + 1
@@ -94,6 +95,8 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
                     correct = (predictions == target).sum().item()
                     accuracy = correct / image.size()[0]        # TODO: maybe a better way to know batch size? 
 
+                    running_corrects += correct
+
                     loss = loss_fn(pred_squeezed, target)
 
                     print("Epoch {}, Batch {} -- {}, Batch Accuracy: {:.4f}, Batch Loss: {:.4f}".format(epoch,batch_number,phase,accuracy,loss.item()))
@@ -102,11 +105,16 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
                         loss.backward()
                         optimizer.step()
 
+            epoch_acc = running_corrects / len(dataloader[phase].dataset)
+            print("Epoch acc {}".format(epoch_acc))
+
+        
         # print epoch duration and estimated time to finish
         epoch_end_time = time.time()
         epoch_duration = epoch_end_time - epoch_start_time
         remaining_epochs = epochs - epoch - 1
         current_eta = epoch_duration * remaining_epochs
+
         print('Epoch took {:.0f} minutes, {:.0f} seconds.'.format(
                 epoch_duration // 60,
                 epoch_duration % 60,))

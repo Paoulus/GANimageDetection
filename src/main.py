@@ -20,9 +20,9 @@ from PIL import Image
 from resnet50nodown import resnet50nodown
 from verdeolivaFineTuning import fineTune
 from verdeolivaFineTuning import TuningDatabase
-from torch import utils
+from torch import utils,arange
 from torch import save as save_model
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from torch.cuda import is_available as is_available_cuda
 from torch.cuda import empty_cache
 from torchvision import transforms
@@ -69,6 +69,11 @@ if __name__ == '__main__':
         'train': TuningDatabase(input_folder,transforms),
         'val': TuningDatabase(input_folder,transforms)
     }
+
+    if settings["LimitDatasetSize"] > 0:
+        databases['train'] = Subset(databases['train'],arange(0,settings["LimitDatasetSize"] ))
+        databases['val'] = Subset(databases['val'],arange(0,settings["LimitDatasetSize"] ))
+
 
     dataloaders = {
         x:DataLoader(databases[x],batch_size=batch_size,shuffle=True,num_workers=2) for x in ['train','val']
