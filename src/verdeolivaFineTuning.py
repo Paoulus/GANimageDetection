@@ -18,12 +18,12 @@ def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resu
     else:
         loss_fn = nn.CrossEntropyLoss()
 
-    starting_epoch = 0
+    checkpoint_epoch = 0
     if resume_from_checkpoint:
         checkpoint = torch.load("./checkpoints/model_checkpoint_epoch.pt")
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        starting_epoch = checkpoint['epoch']
+        checkpoint_epoch = checkpoint['epoch']
 
     for param in model.parameters():
         param.requires_grad = False;
@@ -38,8 +38,10 @@ def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resu
         if param.requires_grad == True:
             print("\t",name)
 
+    required_epochs = epochs - checkpoint_epoch
+
     training_start = time.time()
-    validation_history = train_loop(model, database, loss_fn, optimizer, device, epochs, perform_validation)
+    validation_history = train_loop(model, database, loss_fn, optimizer, device, required_epochs, perform_validation)
     training_end = time.time()
 
     train_min = (training_end - training_start) // 60
