@@ -22,7 +22,7 @@ from verdeolivaFineTuning import fineTune
 from verdeolivaFineTuning import TuningDatabase
 from torch import utils,arange
 from torch import save as save_model
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader, Subset, random_split
 from torch.cuda import is_available as is_available_cuda
 from torch.cuda import empty_cache
 from torchvision import transforms
@@ -65,25 +65,30 @@ if __name__ == '__main__':
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
-    databases = {
-        'train': TuningDatabase(input_folder,transforms),
-        'val': TuningDatabase(input_folder,transforms)
-    }
+    total_dataset = TuningDatabase(input_folder,transforms)
 
     if settings["LimitDatasetSize"] > 0:
-        databases['train'] = Subset(databases['train'],arange(0,settings["LimitDatasetSize"] ))
-        databases['val'] = Subset(databases['val'],arange(0,settings["LimitDatasetSize"] ))
+        total_dataset = Subset(total_dataset,arange(0,settings["LimitDatasetSize"]))
 
+    train_proportion = int(len(total_dataset) * 0.8)
+    test_proportion = len(total_dataset) - train_proportion
+
+    train_dataset,testing_dataset = random_split(total_dataset,[train_proportion,test_proportion])
+
+    databases = {
+        'train': train_dataset,
+        'testing': testing_dataset
+    }
 
     dataloaders = {
-        x:DataLoader(databases[x],batch_size=batch_size,shuffle=True,num_workers=2) for x in ['train','val']
+        x:DataLoader(databases[x],batch_size=batch_size,shuffle=True,num_workers=2) for x in ['train','testing']
     }
 
     if not dry_run:
         print(f"Using device {device}")
         
         starting_model = resnet50nodown(device, weights_path)
-        fine_tuned_model, accuracy_history = fineTune(starting_model, dataloaders, device, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"])
+        fine_tuned_model, accuracy_history = fineTune(starting_model, dataloaders, device, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"],settings["PerformTesting"])
         
         print(f"Saving fine-tuned model")
         save_model(fine_tuned_model.state_dict(), "trained_model_weights.pth")

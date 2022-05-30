@@ -12,7 +12,7 @@ from TuningDatabase import *
 
 # return a fine-tuned version of the original resnet50 model
 # by default num_classes is = 1, since it's specified like that in the original code
-def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resume_from_checkpoint=False, perform_validation = False):
+def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resume_from_checkpoint=False, perform_validation = False, perform_testing = False):
     if num_classes < 2 :
         loss_fn = nn.BCEWithLogitsLoss()
     else:
@@ -41,7 +41,7 @@ def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resu
     required_epochs = epochs - checkpoint_epoch
 
     training_start = time.time()
-    validation_history = train_loop(model, database, loss_fn, optimizer, device, required_epochs, perform_validation)
+    validation_history = train_loop(model, database, loss_fn, optimizer, device, required_epochs, perform_validation, perform_testing)
     training_end = time.time()
 
     train_min = (training_end - training_start) // 60
@@ -50,8 +50,10 @@ def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resu
 
     return model, validation_history
 
+PATH = f"./checkpoints/model_checkpoint_epoch.pt"
+LOSS = 0.4
 
-def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_validation):
+def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_validation, perform_testing):
     best_model_wts = copy.deepcopy(model.state_dict())
     val_loss_history = []
     epoch_acc_history = []
@@ -63,13 +65,16 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
         print('-' * 10)
         # Each epoch has a training and validation phase
         epoch_start_time = time.time()
-        for phase in ['train', 'val']:
+        for phase in ['train', 'testing']:
             if phase == 'train':
                 model.train()  # Set model to training mode
             else:
                 model.eval()   # Set model to evaluate mode
 
             if (not perform_validation) and phase == 'val':
+                continue
+
+            if (not perform_testing) and phase == 'testing':
                 continue
 
             running_corrects = 0
@@ -102,15 +107,26 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
 
                     loss = loss_fn(pred_squeezed, target)
 
-                    print("Epoch {}, Batch {} -- {}, Batch Accuracy: {:.4f}, Batch Loss: {:.4f}".format(epoch,batch_number,phase,accuracy,loss.item()))
+                    print("Epoch {}, Batch {} -- {}, Accuracy: {:.4f}, Loss: {:.4f}".format(epoch,batch_number,phase,accuracy,loss.item()))
 
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
+                        # at the end of the epoch, save the obtained model, so that we may be able to resume training if interrupted
+            
+                if batch_number % 3 :
+                    if not os.path.exists("./checkpoints/") :
+                        os.makedirs("./checkpoints/")
+
+                    torch.save({
+                        'epoch': epoch,
+                        'model_state_dict': model.state_dict(),
+                        'optimizer_state_dict': optimizer.state_dict(),
+                        'loss': LOSS,
+                        }, PATH)
 
             epoch_acc = running_corrects / len(dataloader[phase].dataset)
-            print("Epoch acc {}".format(epoch_acc))
-
+            print("Epoch acc in phase {} : {}".format(phase,epoch_acc))
         
         # print epoch duration and estimated time to finish
         epoch_end_time = time.time()
@@ -124,20 +140,6 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
         if remaining_epochs > 0:
             print('Estimated time to finish: {:.0f} minutes,{:.0f} seconds'.format(current_eta // 60,current_eta % 60))
             print('-' * 10)
-
-        # at the end of the epoch, save the obtained model, so that we may be able to resume training if interrupted
-        PATH = f"./checkpoints/model_checkpoint_epoch.pt"
-        LOSS = 0.4
-
-        if not os.path.exists("./checkpoints/") :
-            os.makedirs("./checkpoints/")
-
-        torch.save({
-            'epoch': epoch + 1,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'loss': LOSS,
-            }, PATH)
 
     model.load_state_dict(best_model_wts)
     return epoch_acc_history

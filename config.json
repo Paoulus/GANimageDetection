@@ -10,5 +10,6 @@
     "BatchSize": 2,
     "Epochs": 4,
     "PerformValidation":false,
+    "PerformTesting":true,
     "LimitDatasetSize": 0
 }
