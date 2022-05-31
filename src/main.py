@@ -20,13 +20,14 @@ from PIL import Image
 from resnet50nodown import resnet50nodown
 from verdeolivaFineTuning import fineTune
 from verdeolivaFineTuning import TuningDatabase
-from torch import utils,arange
+from torch import utils,arange, tensor
 from torch import save as save_model
 from torch.utils.data import DataLoader, Subset, random_split
 from torch.cuda import is_available as is_available_cuda
 from torch.cuda import empty_cache
 from torchvision import transforms
 import csv
+import random
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -68,7 +69,7 @@ if __name__ == '__main__':
     total_dataset = TuningDatabase(input_folder,transforms)
 
     if settings["LimitDatasetSize"] > 0:
-        total_dataset = Subset(total_dataset,arange(0,settings["LimitDatasetSize"]))
+        total_dataset = Subset(total_dataset,tensor(random.sample(range(0,len(total_dataset)),settings["LimitDatasetSize"])))
 
     train_proportion = int(len(total_dataset) * 0.8)
     test_proportion = len(total_dataset) - train_proportion

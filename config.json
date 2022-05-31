@@ -7,8 +7,8 @@
     "ImgChannels": 3,
     "Classes": 2,
     "LearningRate": 0.001,
-    "BatchSize": 2,
-    "Epochs": 4,
+    "BatchSize": 4,
+    "Epochs": 1,
     "PerformValidation":false,
     "PerformTesting":true,
     "LimitDatasetSize": 0

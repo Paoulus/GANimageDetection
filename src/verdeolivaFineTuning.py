@@ -89,7 +89,11 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
                     # apply model; we use the same snipped as the one in model.apply, but with grad_enabled since we want
                     # the gradient for backpropagation
                     pred = model(image).to(device)
-                    pred_squeezed = torch.squeeze(pred)
+                    # specify the dimensions to squeeze, or we will destroy the batch dimension, and then 
+                    # the loss function may complain since input and output will have different shapes
+                    pred_squeezed = torch.squeeze(pred,dim=2)
+                    pred_squeezed = torch.squeeze(pred_squeezed,dim=2)
+
 
                     # if we do regression, modify the target accordingly
                     if model.fc.out_features == 1:
@@ -112,7 +116,6 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
-                        # at the end of the epoch, save the obtained model, so that we may be able to resume training if interrupted
             
                 if batch_number % 3 :
                     if not os.path.exists("./checkpoints/") :
