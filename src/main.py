@@ -19,6 +19,7 @@ import json
 from PIL import Image
 from resnet50nodown import resnet50nodown
 from verdeolivaFineTuning import fineTune
+from verdeolivaFineTuning import testModel
 from verdeolivaFineTuning import TuningDatabase
 from torch import utils,arange, tensor
 from torch import save as save_model
@@ -82,7 +83,7 @@ if __name__ == '__main__':
     }
 
     dataloaders = {
-        x:DataLoader(databases[x],batch_size=batch_size,shuffle=True,num_workers=2) for x in ['train','testing']
+        x:DataLoader(databases[x],batch_size=batch_size,shuffle=True) for x in ['train','testing']
     }
 
     if not dry_run:
@@ -91,6 +92,8 @@ if __name__ == '__main__':
         starting_model = resnet50nodown(device, weights_path)
         fine_tuned_model, accuracy_history = fineTune(starting_model, dataloaders, device, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"],settings["PerformTesting"])
         
+        testModel(fine_tuned_model,dataloaders,device)
+
         print(f"Saving fine-tuned model")
         save_model(fine_tuned_model.state_dict(), "trained_model_weights.pth")
             
