@@ -211,13 +211,14 @@ def testModel(model,dataloaders,device):
                 tbatch.set_postfix(accuracy=accuracy, real=zeroaccuracy, fake=oneaccuracy)
 
         # Build confusion matrix
-        """
+
         cf_matrix = confusion_matrix(y_true.cpu().numpy(), y_pred.cpu().numpy())
-        df_cm = pd.DataFrame((cf_matrix.T/np.sum(cf_matrix,axis=1)).T *100, index = [i for i in ['real','fake']],
-                     columns = [i for i in ['real','fake']])
-        print('Confusion_Matrix:\n {}\n'.format(df_cm))
-        """
-        
+        # do not create dataFrame if there are nan in the cf_matrix
+        if cf_matrix.shape == (2,2):
+            df_cm = pd.DataFrame((cf_matrix.T/np.sum(cf_matrix,axis=1)).T *100, index = [i for i in ['real','fake']],
+                         columns = [i for i in ['real','fake']])
+            print('Confusion_Matrix:\n {}\n'.format(df_cm))
+
         print(f'Got tot: {num_correct} / {num_samples} with accuracy {float(num_correct)/float(num_samples)*100:.2f} \n')
         if zerosamples > 0:
             print(f'Got Real: {zerocorrect} / {zerosamples} with accuracy {float(zerocorrect)/float(zerosamples)*100:.2f} \n')
