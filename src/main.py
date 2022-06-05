@@ -42,7 +42,6 @@ if __name__ == '__main__':
     parser.add_argument('--output_csv', '-o', type=str, default=None, help='output CSV file')
     parser.add_argument('--device_to_use', '-d', type=str, default='cuda:0',
                         help='device to use for fine tuning (values: cpu, cuda:0)')
-    parser.add_argument('--dry-run', help='just print the selected options, then exit', action="store_true")
     config = parser.parse_args()
     
     # by default, use configuration in config.json
@@ -53,7 +52,6 @@ if __name__ == '__main__':
     input_folder = settings["DatasetPath"]
     output_csv = config.output_csv
     device_to_use = config.device_to_use
-    dry_run = config.dry_run
     resume_from_checkpoint = settings["LoadCheckpoint"]
     batch_size = settings["BatchSize"]
 
@@ -86,29 +84,23 @@ if __name__ == '__main__':
         x:DataLoader(databases[x],batch_size=batch_size,shuffle=True) for x in ['train','testing']
     }
 
-    if not dry_run:
-        print(f"Using device {device}")
-        
-        starting_model = resnet50nodown(device, weights_path)
-        fine_tuned_model, accuracy_history = fineTune(starting_model, dataloaders, device, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"],settings["PerformTesting"])
-        
-        testModel(fine_tuned_model,dataloaders,device)
+    print(f"Using device {device}")
 
-        print(f"Saving fine-tuned model")
-        save_model(fine_tuned_model.state_dict(), "trained_model_weights.pth")
-            
-        with open("validation_accuracy_history.csv","w",newline="") as csvfile:
-            fieldnames = ["accuracy","epoch"]
-            writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
-            writer.writeheader()
-            for index in range(len(accuracy_history)):
-                writer.writerow({"accuracy":accuracy_history[index],"epoch":index})
+    starting_model = resnet50nodown(device, weights_path)
+    fine_tuned_model, accuracy_history = fineTune(starting_model, dataloaders, device, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"],settings["PerformTesting"])
 
-            empty_cache()
+    testModel(fine_tuned_model,dataloaders,device)
 
-            print('DONE')
-    else:
-        print(f"Will use data in {input_folder}")
-        print(f"Model will be initialized with weights from {weights_path}")
-        print(f"Output will be written in {output_csv}")
-        print("Will save model in trained_model_weights.pth")
+    print(f"Saving fine-tuned model")
+    save_model(fine_tuned_model.state_dict(), "trained_model_weights.pth")
+
+    with open("validation_accuracy_history.csv","w",newline="") as csvfile:
+        fieldnames = ["accuracy","epoch"]
+        writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
+        writer.writeheader()
+        for index in range(len(accuracy_history)):
+            writer.writerow({"accuracy":accuracy_history[index],"epoch":index})
+
+        empty_cache()
+
+        print('DONE')
