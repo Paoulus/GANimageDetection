@@ -211,7 +211,6 @@ def testModel(model,dataloaders,device):
                 tbatch.set_postfix(accuracy=accuracy, real=zeroaccuracy, fake=oneaccuracy)
 
         # Build confusion matrix
-
         cf_matrix = confusion_matrix(y_true.cpu().numpy(), y_pred.cpu().numpy())
         # do not create dataFrame if there are nan in the cf_matrix
         if cf_matrix.shape == (2,2):

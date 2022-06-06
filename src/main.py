@@ -37,9 +37,6 @@ if __name__ == '__main__':
     parser.add_argument('--config_path', '-c', type=str, default='config.json')
     parser.add_argument('--weights_path', '-m', type=str, default='./weights/gandetection_resnet50nodown_stylegan2.pth',
                         help='weights path of the network')
-    parser.add_argument('--input_folder', '-i', type=str, default='./fake_dataset',
-                        help='input folder with PNG and JPEG images')
-    parser.add_argument('--output_csv', '-o', type=str, default=None, help='output CSV file')
     parser.add_argument('--device_to_use', '-d', type=str, default='cuda:0',
                         help='device to use for fine tuning (values: cpu, cuda:0)')
     config = parser.parse_args()
@@ -50,13 +47,13 @@ if __name__ == '__main__':
 
     weights_path = config.weights_path
     input_folder = settings["DatasetPath"]
-    output_csv = config.output_csv
+    training_results_path = settings["TrainingResultsPath"]
     device_to_use = config.device_to_use
     resume_from_checkpoint = settings["LoadCheckpoint"]
     batch_size = settings["BatchSize"]
 
-    if output_csv is None:
-        output_csv = 'out.' + os.path.basename(input_folder) + '.csv'
+    if training_results_path is None:
+        training_results_path = 'results.' + os.path.basename(input_folder) + '.csv'
 
     device = device_to_use if is_available_cuda() else 'cpu'
 
@@ -67,8 +64,10 @@ if __name__ == '__main__':
 
     total_dataset = TuningDatabase(input_folder,transforms)
 
-    if settings["LimitDatasetSize"] > 0:
-        total_dataset = Subset(total_dataset,tensor(random.sample(range(0,len(total_dataset)),settings["LimitDatasetSize"])))
+    dataset_size_limit = settings["DatasetSizeLimit"]
+    if dataset_size_limit > 0:
+        print("Limiting total dataset size to : {}".format(dataset_size_limit))
+        total_dataset = Subset(total_dataset,tensor(random.sample(range(0,len(total_dataset)),dataset_size_limit)))
 
     train_proportion = int(len(total_dataset) * 0.8)
     test_proportion = len(total_dataset) - train_proportion
@@ -85,6 +84,7 @@ if __name__ == '__main__':
     }
 
     print(f"Using device {device}")
+    print("Will train with {} images and test with {} images".format(len(databases['train']),len(databases['testing'])))
 
     starting_model = resnet50nodown(device, weights_path)
     fine_tuned_model, accuracy_history = fineTune(starting_model, dataloaders, device, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"],settings["PerformTesting"])
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     print(f"Saving fine-tuned model")
     save_model(fine_tuned_model.state_dict(), "trained_model_weights.pth")
 
-    with open("validation_accuracy_history.csv","w",newline="") as csvfile:
+    with open(training_results_path,"w",newline="") as csvfile:
         fieldnames = ["accuracy","epoch"]
         writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
         writer.writeheader()

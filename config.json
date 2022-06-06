@@ -7,9 +7,10 @@
     "ImgChannels": 3,
     "Classes": 2,
     "LearningRate": 0.001,
-    "BatchSize": 4,
+    "BatchSize": 2,
     "Epochs": 1,
     "PerformValidation":false,
     "PerformTesting":true,
-    "LimitDatasetSize": 0
+    "DatasetSizeLimit": 0,
+    "TrainingResultsPath": "training_results.csv"
 }
