@@ -10,10 +10,10 @@
 # (included in this package) and online at
 # http://www.grip.unina.it/download/LICENSE_OPEN.txt
 #
-
+import datetime
 import os
 import glob
-import time
+from time import  gmtime
 import argparse
 import json
 from PIL import Image
@@ -50,7 +50,9 @@ if __name__ == '__main__':
     training_results_path = settings["TrainingResultsPath"]
     device_to_use = config.device_to_use
     resume_from_checkpoint = settings["LoadCheckpoint"]
+    checkpoints_path = settings["CheckpointPath"]
     batch_size = settings["BatchSize"]
+    finetuned_weights_path = settings["FinetunedWeightsPath"]
 
     if training_results_path is None:
         training_results_path = 'results.' + os.path.basename(input_folder) + '.csv'
@@ -85,14 +87,18 @@ if __name__ == '__main__':
 
     print(f"Using device {device}")
     print("Will train with {} images and test with {} images".format(len(databases['train']),len(databases['testing'])))
+    print("Dataset located at: {}".format(input_folder))
 
     starting_model = resnet50nodown(device, weights_path)
-    fine_tuned_model, accuracy_history = fineTune(starting_model, dataloaders, device, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"],settings["PerformTesting"])
+    print("Training started on {}".format(datetime.datetime.now().strftime("%b %a %d at %H:%M:%S")))
+    fine_tuned_model, accuracy_history = fineTune(starting_model, dataloaders, device, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"],settings["PerformTesting"],checkpoints_path)
+    print("Training ended on {}".format(datetime.datetime.now().strftime("%b %a %d at %H:%M:%S")))
 
     testModel(fine_tuned_model,dataloaders,device)
 
-    print(f"Saving fine-tuned model")
-    save_model(fine_tuned_model.state_dict(), "trained_model_weights.pth")
+    print("Checkpoints are located at {}".format(checkpoints_path))
+    print("Saving fine-tuned model (most recent checkpoint) in {}".format(finetuned_weights_path))
+    save_model(fine_tuned_model.state_dict(), finetuned_weights_path)
 
     with open(training_results_path,"w",newline="") as csvfile:
         fieldnames = ["accuracy","epoch"]

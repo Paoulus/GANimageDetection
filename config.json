@@ -7,10 +7,11 @@
     "ImgChannels": 3,
     "Classes": 2,
     "LearningRate": 0.001,
-    "BatchSize": 2,
+    "BatchSize": 1,
     "Epochs": 1,
     "PerformValidation":false,
     "PerformTesting":true,
     "DatasetSizeLimit": 0,
+    "FinetunedWeightsPath":"finetuned_model_weights.pth",
     "TrainingResultsPath": "training_results.csv"
 }

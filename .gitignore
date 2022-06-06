@@ -2,9 +2,10 @@ __pycache__
 .idea
 weights
 fake_dataset
-trained_model_weights.pth
+*.pth
 *.csv
 checkpoints
 DatasetFast
 nohup.out
 output.log
+Acc_Loss.txt

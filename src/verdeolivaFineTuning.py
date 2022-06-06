@@ -16,7 +16,7 @@ import numpy as np
 
 # return a fine-tuned version of the original resnet50 model
 # by default num_classes is = 1, since it's specified like that in the original code
-def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resume_from_checkpoint=False, perform_validation = False, perform_testing = False):
+def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resume_from_checkpoint=False, perform_validation = False, perform_testing = False, checkpoints_path="./checkpoints/"):
     if num_classes < 2 :
         loss_fn = nn.BCEWithLogitsLoss()
     else:
@@ -24,7 +24,7 @@ def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resu
 
     checkpoint_epoch = 0
     if resume_from_checkpoint:
-        checkpoint = torch.load("./checkpoints/model_checkpoint_epoch.pt")
+        checkpoint = torch.load(os.path.join(checkpoints_path,"model_checkpoint_epoch.pt"))
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         checkpoint_epoch = checkpoint['epoch']
@@ -45,7 +45,7 @@ def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resu
     required_epochs = epochs - checkpoint_epoch
 
     training_start = time.time()
-    validation_history = train_loop(model, database, loss_fn, optimizer, device, required_epochs, perform_validation, perform_testing)
+    validation_history = train_loop(model, database, loss_fn, optimizer, device, required_epochs, perform_validation, perform_testing,checkpoints_path)
     training_end = time.time()
 
     train_min = (training_end - training_start) // 60
@@ -54,15 +54,14 @@ def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resu
 
     return model, validation_history
 
-PATH = f"./checkpoints/model_checkpoint_epoch.pt"
-LOSS = 0.4
-
-def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_validation, perform_testing):
+def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_validation, perform_testing,checkpoints_path):
     best_model_wts = copy.deepcopy(model.state_dict())
     val_loss_history = []
     epoch_acc_history = []
     epoch_losses = []
     epoch_loss = 0
+
+    checkpoints_file_name = os.path.join(checkpoints_path,"checkpoint.pth")
 
     for epoch in range(0,epochs):
         print('Epoch {}/{}'.format(epoch,epochs - 1))
@@ -130,15 +129,15 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
                         optimizer.step()
             
                 if batch_number % 3 :
-                    if not os.path.exists("./checkpoints/") :
-                        os.makedirs("./checkpoints/")
+                    if not os.path.exists(checkpoints_path) :
+                        os.makedirs(checkpoints_path)
 
                     torch.save({
                         'epoch': epoch,
                         'model_state_dict': model.state_dict(),
                         'optimizer_state_dict': optimizer.state_dict(),
-                        'loss': LOSS,
-                        }, PATH)
+                        'loss': loss.item(),
+                        }, checkpoints_file_name)
 
             epoch_acc = running_corrects / len(dataloader[phase].dataset)
             print("Epoch acc in phase {} : {}".format(phase,epoch_acc))
