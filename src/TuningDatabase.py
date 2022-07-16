@@ -39,9 +39,10 @@ class TuningDatabase(datasets.DatasetFolder):
             small_list = fake_images
 
         while len(small_list) < len(large_list):
-            small_list.append(random.sample(small_list,1))
+            random_index = random.randrange(1,(len(small_list)))
+            small_list.append(small_list[random_index])
 
-        self.samples = list(large_list,small_list)
+        self.samples = large_list + small_list
 
     def __len__(self):
         return len(self.samples)
