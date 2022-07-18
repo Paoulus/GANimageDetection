@@ -66,11 +66,6 @@ if __name__ == '__main__':
 
     total_dataset = TuningDatabase(input_folder,transforms)
 
-    dataset_size_limit = settings["DatasetSizeLimit"]
-    if dataset_size_limit > 0:
-        print("Limiting total dataset size to : {}".format(dataset_size_limit))
-        total_dataset = Subset(total_dataset,tensor(random.sample(range(0,len(total_dataset)),dataset_size_limit)))
-
     train_proportion = int(len(total_dataset) * 0.8)
     test_proportion = len(total_dataset) - train_proportion
 

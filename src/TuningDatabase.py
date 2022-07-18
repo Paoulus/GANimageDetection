@@ -13,12 +13,17 @@ class TuningDatabase(datasets.DatasetFolder):
         self.transform = transform
         real_images = []
         fake_images = []
+        fake_count = 0
+        real_count = 0
         for entry in os.listdir(path):
             data_folder = os.path.join(path, entry)
             if entry == 'FFHQ' or entry == "Real":
                 for root, dirs, files in os.walk(data_folder):
                     for file in files:
                         if file.endswith(".png"):
+                            if real_count > 8:
+                                break
+                            real_count += 1
                             item = os.path.join(root, file), 0
                             real_images.append(item)
             if entry == 'styleGAN' or entry == 'StyleGAN2' or entry =="Fake":
@@ -26,23 +31,14 @@ class TuningDatabase(datasets.DatasetFolder):
                     dirs[:] = [d for d in dirs if d not in exclude]
                     for file in files:
                         if file.endswith(".png"):
+                            if fake_count > 8:
+                                break
+                            fake_count += 1
                             item = os.path.join(root, file), 1
                             fake_images.append(item)
 
-        large_list = []
-        small_list = []
-        if len(fake_images) > len(real_images):
-            large_list = fake_images
-            small_list = real_images
-        else:
-            large_list = real_images
-            small_list = fake_images
-
-        while len(small_list) < len(large_list):
-            random_index = random.randrange(0,len(small_list))
-            small_list.append(small_list[random_index])
-
-        self.samples = large_list + small_list
+        self.samples = real_images + fake_images
+        pass
 
     def __len__(self):
         return len(self.samples)
