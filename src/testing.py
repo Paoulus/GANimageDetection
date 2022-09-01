@@ -1,11 +1,15 @@
 import argparse
 
-from resnet50fineTuning import *
+from verdeolivaFineTuning import testModel
+from resnet50nodown import *
+from TestingDatabase import TestingDatabase
+from torch.utils.data import DataLoader
+from torchvision import transforms
 
-batch_size = 16
+batch_size = 2
 num_classes = 2
 
-device = "cpu"
+device = "cuda:0"
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(
@@ -24,13 +28,22 @@ if __name__ == '__main__':
 
 	starting_model = resnet50nodown(device, weights_path)
 
-	starting_model.load_state_dict(torch.load("trained_model_weights.pth"))
+	starting_model.change_output(2)
+	starting_model.fc.to(device)
+
+	starting_model.load_state_dict(torch.load("finetuned_model_weights.pth"))
 	starting_model.eval()
 
-	testing_db = TuningDatabase(data_dir)
+	transforms = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+		transforms.Resize([1024,1024])
+    ])
 
-	for index in range(0,len(testing_db)):
-		sample, label = testing_db[index]
-		output = starting_model.apply(sample)
-		print(f"output is {output}")
-		print(f"label is {label}")
+	testing_db = TestingDatabase(data_dir,transforms)
+
+	dataloader = DataLoader(testing_db,batch_size=batch_size,shuffle=True)
+
+	dictionary_dataloader = {"testing":dataloader}
+
+	testModel(starting_model,dictionary_dataloader,device)

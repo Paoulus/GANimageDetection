@@ -9,3 +9,5 @@ DatasetFast
 nohup.out
 output.log
 Acc_Loss.txt
+*.log
+.vscode

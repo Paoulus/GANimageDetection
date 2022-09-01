@@ -57,7 +57,8 @@ if __name__ == '__main__':
     if training_results_path is None:
         training_results_path = 'results.' + os.path.basename(input_folder) + '.csv'
 
-    device = device_to_use if is_available_cuda() else 'cpu'
+    #device = device_to_use if is_available_cuda() else 'cpu'
+    device = "cuda"
 
     transforms = transforms.Compose([
         transforms.ToTensor(),

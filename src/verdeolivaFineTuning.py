@@ -41,7 +41,6 @@ def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resu
     for name,param in model.named_parameters():
         if param.requires_grad == True:
             print("\t",name)
-
     required_epochs = epochs - checkpoint_epoch
 
     training_start = time.time()
@@ -60,6 +59,9 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
     epoch_acc_history = []
     epoch_losses = []
     epoch_loss = 0
+
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.deterministic = True
 
     checkpoints_file_name = os.path.join(checkpoints_path,"checkpoint.pth")
 
@@ -86,7 +88,7 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
             for image,target in dataloader[phase]:
                 batch_number = batch_number + 1
 
-                with torch.set_grad_enabled(phase == 'train'):
+                with torch.set_grad_enabled(phase=="train"):
                     optimizer.zero_grad()
 
                     image = image.to(device)

@@ -1,17 +1,17 @@
 {
     "Model": "resnet50nodown",
     "CheckpointPath": "checkpoints/",
-    "DatasetPath": "./fake_dataset",
+    "DatasetPath": "/media/antoniostefani/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/forensicsDatasets",
     "LoadCheckpoint": false,
     "Train": true,
     "ImgChannels": 3,
     "Classes": 2,
     "LearningRate": 0.001,
-    "BatchSize": 1,
-    "Epochs": 1,
+    "BatchSize": 4,
+    "Epochs": 10,
     "PerformValidation":false,
     "PerformTesting":true,
-    "DatasetSizeLimit": 0,
+    "DatasetSizeLimit": 50000,
     "FinetunedWeightsPath":"finetuned_model_weights.pth",
     "TrainingResultsPath": "training_results.csv"
 }
