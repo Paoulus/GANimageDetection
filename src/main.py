@@ -10,10 +10,9 @@
 # (included in this package) and online at
 # http://www.grip.unina.it/download/LICENSE_OPEN.txt
 #
-import datetime
+from datetime import datetime
 import os
 import glob
-from time import  gmtime
 import argparse
 import json
 from PIL import Image
@@ -39,26 +38,24 @@ if __name__ == '__main__':
                         help='weights path of the network')
     parser.add_argument('--device_to_use', '-d', type=str, default='cuda:0',
                         help='device to use for fine tuning (values: cpu, cuda:0)')
-    config = parser.parse_args()
+    script_arguments = parser.parse_args()
     
-    # by default, use configuration in config.json
-    config_file = open(config.config_path,"r")
+    config_file = open(script_arguments.config_path,"r")
     settings = json.loads(config_file.read())
 
-    weights_path = config.weights_path
+    weights_path = script_arguments.weights_path
+    device_to_use = script_arguments.device_to_use
     input_folder = settings["DatasetPath"]
-    training_results_path = settings["TrainingResultsPath"]
-    device_to_use = config.device_to_use
     resume_from_checkpoint = settings["LoadCheckpoint"]
-    checkpoints_path = settings["CheckpointPath"]
     batch_size = settings["BatchSize"]
-    finetuned_weights_path = settings["FinetunedWeightsPath"]
+    today = datetime.now()
+    date_folder = today.strftime("%m_%d_%H_%M_%S")
+    logs_folder = os.path.join("logs",date_folder)
+    finetuned_weights_path = os.path.join(logs_folder,"finetuned_weights.pth")
+    checkpoints_path = os.path.join(logs_folder,"checkpoints")
 
-    if training_results_path is None:
-        training_results_path = 'results.' + os.path.basename(input_folder) + '.csv'
-
-    #device = device_to_use if is_available_cuda() else 'cpu'
-    device = "cuda"
+    if not os.path.exists(logs_folder):
+        os.mkdir(logs_folder)
 
     transforms = transforms.Compose([
         transforms.ToTensor(),
@@ -81,28 +78,30 @@ if __name__ == '__main__':
         x:DataLoader(databases[x],batch_size=batch_size,shuffle=True) for x in ['train','testing']
     }
 
-    print(f"Using device {device}")
-    print("Will train with {} images and test with {} images".format(len(databases['train']),len(databases['testing'])))
+    # retrieve the data directly from the database, so we do not transform the
+    # sample just to read the label
+    real_images_count = 0
+    fake_images_count = 0
+    for index in databases['train'].indices:
+        if total_dataset.samples[index][1] == 0 : 
+            real_images_count += 1
+        else:
+            fake_images_count += 1
+
+    print("TRAINING INFO")
+    print(f"Using device {device_to_use}")
     print("Dataset located at: {}".format(input_folder))
+    print("Will train with {} images and test with {} images".format(len(databases['train']),len(databases['testing'])))
+    print("Training dataset composition: \n {} samples labeled real \n {} samples labeled fake".format(real_images_count,fake_images_count))
+    print(10*"=")
 
-    starting_model = resnet50nodown(device, weights_path)
-    print("Training started on {}".format(datetime.datetime.now().strftime("%b %a %d at %H:%M:%S")))
-    fine_tuned_model, accuracy_history = fineTune(starting_model, dataloaders, device, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"],settings["PerformTesting"],checkpoints_path)
-    print("Training ended on {}".format(datetime.datetime.now().strftime("%b %a %d at %H:%M:%S")))
+    resnet_no_down_model = resnet50nodown(device_to_use, weights_path)
+    print("Training started on {}".format(datetime.now().strftime("%b %a %d at %H:%M:%S")))
+    fine_tuned_model, accuracy_history = fineTune(resnet_no_down_model, dataloaders, device_to_use, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"],settings["PerformTesting"],checkpoints_path)
+    print("Training ended on {}".format(datetime.now().strftime("%b %a %d at %H:%M:%S")))
 
-    testModel(fine_tuned_model,dataloaders,device)
+    testModel(fine_tuned_model,dataloaders,device_to_use)
 
     print("Checkpoints are located at {}".format(checkpoints_path))
     print("Saving fine-tuned model (most recent checkpoint) in {}".format(finetuned_weights_path))
     save_model(fine_tuned_model.state_dict(), finetuned_weights_path)
-
-    with open(training_results_path,"w",newline="") as csvfile:
-        fieldnames = ["accuracy","epoch"]
-        writer = csv.DictWriter(csvfile,fieldnames=fieldnames)
-        writer.writeheader()
-        for index in range(len(accuracy_history)):
-            writer.writerow({"accuracy":accuracy_history[index],"epoch":index})
-
-        empty_cache()
-
-        print('DONE')

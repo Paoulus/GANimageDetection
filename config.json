@@ -11,7 +11,5 @@
     "Epochs": 10,
     "PerformValidation":false,
     "PerformTesting":true,
-    "DatasetSizeLimit": 50000,
-    "FinetunedWeightsPath":"finetuned_model_weights.pth",
-    "TrainingResultsPath": "training_results.csv"
+    "DatasetSizeLimit": 50000
 }
