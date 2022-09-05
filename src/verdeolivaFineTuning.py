@@ -8,7 +8,7 @@ from resnet50nodown import *
 from PIL import Image
 import copy
 import time
-from TuningDatabase import *
+from TuningDatabase import TuningDatabase
 from tqdm import tqdm
 from sklearn.metrics import confusion_matrix
 import pandas as pd
@@ -160,7 +160,7 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
     model.load_state_dict(best_model_wts)
     return epoch_acc_history
 
-def testModel(model,dataloaders,device):
+def testModel(model,dataloaders,device,print_details=False):
     model.eval()
 
     zerosamples = 0
@@ -193,7 +193,6 @@ def testModel(model,dataloaders,device):
 
                 _, predictions = scores.max(1)
                 y_pred = torch.cat((y_pred, predictions))
-
 
                 zerosamples += len(y[y==0])
                 zerocorrect += (y[y==predictions]==0).sum().item()

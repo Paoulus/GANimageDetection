@@ -9,7 +9,7 @@
     "LearningRate": 0.001,
     "BatchSize": 4,
     "Epochs": 10,
-    "PerformValidation":false,
+    "PerformValidation":true,
     "PerformTesting":true,
     "DatasetSizeLimit": 50000
 }

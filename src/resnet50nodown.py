@@ -193,7 +193,7 @@ class ResNet(nn.Module):
             logit = np.mean(np.asarray(list_logit) * np.asarray(list_weight)) / np.mean(list_weight)
         else:
             with torch.no_grad():
-                logit = torch.squeeze(self(self.transform(pil).to(device)[None, :, :, :])).cpu().numpy()
+                logit = torch.squeeze(self(self.transform(pil).to(device)[None, :, :, :])).cpu().numpy()    
 
         return logit
 

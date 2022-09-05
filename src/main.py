@@ -19,13 +19,13 @@ from PIL import Image
 from resnet50nodown import resnet50nodown
 from verdeolivaFineTuning import fineTune
 from verdeolivaFineTuning import testModel
-from verdeolivaFineTuning import TuningDatabase
 from torch import utils,arange, tensor
 from torch import save as save_model
 from torch.utils.data import DataLoader, Subset, random_split
 from torch.cuda import is_available as is_available_cuda
 from torch.cuda import empty_cache
 from torchvision import transforms
+from TuningDatabase import TuningDatabaseWithRandomSampling
 import csv
 import random
 
@@ -62,31 +62,39 @@ if __name__ == '__main__':
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
-    total_dataset = TuningDatabase(input_folder,transforms)
+    total_dataset = TuningDatabaseWithRandomSampling(input_folder,transforms,seed=451)
 
     train_proportion = int(len(total_dataset) * 0.8)
     test_proportion = len(total_dataset) - train_proportion
 
     train_dataset,testing_dataset = random_split(total_dataset,[train_proportion,test_proportion])
 
+    validation_proportion = int(test_proportion * 0.2)
+    test_proportion = test_proportion - validation_proportion
+    testing_dataset,validation_dataset = random_split(testing_dataset,[test_proportion,validation_proportion])
+
     databases = {
         'train': train_dataset,
-        'testing': testing_dataset
+        'testing': testing_dataset,
+        'val': validation_dataset
     }
 
     dataloaders = {
-        x:DataLoader(databases[x],batch_size=batch_size,shuffle=True) for x in ['train','testing']
+        x:DataLoader(databases[x],batch_size=batch_size,shuffle=True) for x in ['train','testing','val']
     }
 
     # retrieve the data directly from the database, so we do not transform the
     # sample just to read the label
     real_images_count = 0
     fake_images_count = 0
+    
+    test_dataset_files = []
     for index in databases['train'].indices:
         if total_dataset.samples[index][1] == 0 : 
             real_images_count += 1
         else:
             fake_images_count += 1
+        test_dataset_files.append(total_dataset.samples[index][0])
 
     print("TRAINING INFO")
     print(f"Using device {device_to_use}")
@@ -94,11 +102,19 @@ if __name__ == '__main__':
     print("Will train with {} images and test with {} images".format(len(databases['train']),len(databases['testing'])))
     print("Training dataset composition: \n {} samples labeled real \n {} samples labeled fake".format(real_images_count,fake_images_count))
     print(10*"=")
+    print("Training on images")
+    for filename in test_dataset_files:
+        print(filename)
+    print(10*"=")
 
     resnet_no_down_model = resnet50nodown(device_to_use, weights_path)
     print("Training started on {}".format(datetime.now().strftime("%b %a %d at %H:%M:%S")))
-    fine_tuned_model, accuracy_history = fineTune(resnet_no_down_model, dataloaders, device_to_use, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"],settings["PerformTesting"],checkpoints_path)
+    # fine_tuned_model, accuracy_history = fineTune(resnet_no_down_model, dataloaders, device_to_use, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"],settings["PerformTesting"],checkpoints_path)
     print("Training ended on {}".format(datetime.now().strftime("%b %a %d at %H:%M:%S")))
+
+    print("Testing on")
+    for index in databases["testing"].indices:
+        print(total_dataset.samples[index][0])
 
     testModel(fine_tuned_model,dataloaders,device_to_use)
 
