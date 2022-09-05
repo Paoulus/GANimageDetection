@@ -6,7 +6,7 @@ from resnet50nodown import *
 from TestingDatabase import TestingDatabase
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from TuningDatabase import TuningDatabase
+from TuningDatabase import TuningDatabaseWithRandomSampling
 
 batch_size = 2
 num_classes = 2
@@ -39,7 +39,7 @@ if __name__ == '__main__':
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
-    testing_db = TuningDatabase(data_dir)
+    testing_db = TuningDatabaseWithRandomSampling(data_dir,seed=451)
     #testing_db = TestingDatabase(test_dir)
 
     images_used_for_testing = []
