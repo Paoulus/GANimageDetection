@@ -74,11 +74,12 @@ class TuningDatabaseWithRandomSampling(datasets.DatasetFolder):
                 if entry == 'FFHQ' or entry == 'Real' or entry == '0_Real':
                     for root, dirs, files in os.walk(data_folder, topdown=True):
                         for file in sorted(files):
-                            if (file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg"))  and (self.downsamplervariable % 1 == 0) and self.real_images_count < real_amount:
+                            if (file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg"))  and (self.downsamplervariable % 1 == 0):
                                 item = os.path.join(root, file), 0
                                 self.real_images.append(item)
                                 self.real_images_count += 1
                             self.downsamplervariable += 1
+                    self.real_images = rand_generator.sample(self.real_images,real_amount)
                 elif (((entry == 'StyleGAN' or entry == 'StyleGAN2') and os.path.basename(path) == 'forensicsDatasets') or entry=='Fake' or entry=='1_Fake'):
                     exclude = set(['code', 'tmp', 'dataStyleGAN2'])
                     files_in_folder = []
