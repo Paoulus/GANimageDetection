@@ -25,7 +25,7 @@ from torch.utils.data import DataLoader, Subset, random_split
 from torch.cuda import is_available as is_available_cuda
 from torch.cuda import empty_cache
 from torchvision import transforms
-from TuningDatabase import TuningDatabaseWithRandomSampling
+from TuningDatabase import TuningDatabaseWithRandomSampling, TuningDatabaseFromSamples
 import csv
 import random
 
@@ -68,21 +68,20 @@ if __name__ == '__main__':
         print(path)
 
     train_proportion = int(len(total_dataset) * 0.8)
-    testing_proportion = len(total_dataset) - train_proportion
+    remaining_proportion = len(total_dataset) - train_proportion
 
-    train_dataset,testing_dataset = random_split(total_dataset,[train_proportion,testing_proportion])
+    validation_proportion = int(remaining_proportion * 0.5)
+    test_proportion = remaining_proportion - validation_proportion
 
-    validation_proportion = int(len(testing_dataset) * 0.5)
-    test_proportion = len(testing_dataset) - validation_proportion
+    random_test_set = random.Random(97234)
+    
+    test_dataset_samples = random_test_set.sample(total_dataset.samples,test_proportion)
+    for el in test_dataset_samples:
+        total_dataset.samples.remove(el)
+    
+    test_dataset = TuningDatabaseFromSamples(test_dataset_samples,transforms)
 
-    print("Testing dataset before split")
-    for index in testing_dataset.indices:
-        print(total_dataset.samples[index][0])
-
-    # note: test_datasset and validation_dataset become a subset of a subset, and this is problematic since the indices of a subset of a subset do not refer to 
-    # the original dataset, but to the subset it comes from. 
-
-    test_dataset,validation_dataset = random_split(testing_dataset.indices,[test_proportion,validation_proportion])
+    train_dataset,validation_dataset = random_split(total_dataset,[train_proportion,validation_proportion])
 
     databases = {
         'train': train_dataset,
@@ -120,15 +119,14 @@ if __name__ == '__main__':
     print("Validating on")
     for index in databases['val'].indices:
         print(total_dataset.samples[index][0])
+    print("Testing on")
+    for path,label in databases["testing"].samples:
+        print(path)
 
     resnet_no_down_model = resnet50nodown(device_to_use, weights_path)
     print("Training started on {}".format(datetime.now().strftime("%b %a %d at %H:%M:%S")))
     fine_tuned_model, accuracy_history = fineTune(resnet_no_down_model, dataloaders, device_to_use, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"],settings["PerformTesting"],checkpoints_path)
     print("Training ended on {}".format(datetime.now().strftime("%b %a %d at %H:%M:%S")))
-
-    print("Testing on")
-    for index in databases["testing"].indices:
-        print(total_dataset.samples[index][0])
 
     testModel(fine_tuned_model,dataloaders,device_to_use)
 

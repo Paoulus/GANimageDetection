@@ -54,11 +54,8 @@ def fineTune(model, database, device, epochs, learning_rate, num_classes=1, resu
     return model, validation_history
 
 def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_validation, perform_testing,checkpoints_path):
-    best_model_wts = copy.deepcopy(model.state_dict())
     val_loss_history = []
     epoch_acc_history = []
-    epoch_losses = []
-    epoch_loss = 0
 
     torch.backends.cudnn.benchmark = True
     torch.backends.cudnn.deterministic = True
@@ -76,6 +73,7 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
             else:
                 model.eval()   # Set model to evaluate mode
 
+            # continue to next phase if perform_validation is false
             if (not perform_validation) and phase == 'val':
                 continue
 
@@ -156,8 +154,6 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
         if remaining_epochs > 0:
             print('Estimated time to finish: {:.0f} minutes,{:.0f} seconds'.format(current_eta // 60,current_eta % 60))
             print('-' * 10)
-
-    model.load_state_dict(best_model_wts)
     return epoch_acc_history
 
 def testModel(model,dataloaders,device,print_details=False):

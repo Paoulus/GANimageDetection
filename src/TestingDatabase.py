@@ -40,14 +40,6 @@ class TestingDatabase(datasets.DatasetFolder):
         real_images.sort()
         fake_images.sort()
 
-        #res = []
-
-        #res.extend(real_images)
-
-        #res.append(fake_images[0])
-        #for i in range(4,len(fake_images),5):
-        #    res.append(fake_images[i])
-
         self.samples = real_images + fake_images
 
     def __len__(self):

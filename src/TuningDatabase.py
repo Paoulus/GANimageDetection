@@ -111,3 +111,9 @@ class TuningDatabaseWithRandomSampling(datasets.DatasetFolder):
         if self.transform is not None:
             sample = self.transform(sample)
         return sample, target
+
+class TuningDatabaseFromSamples(TuningDatabaseWithRandomSampling):
+    def __init__(self,samples,transform=None):
+        self.classes = ["real","generated"]
+        self.samples = samples
+        self.transform = transform

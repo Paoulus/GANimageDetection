@@ -1,7 +1,7 @@
 {
     "Model": "resnet50nodown",
     "CheckpointPath": "checkpoints/",
-    "DatasetPath": "/media/antoniostefani/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/forensicsDatasets",
+    "DatasetPath": "/media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/forensicsDatasets",
     "LoadCheckpoint": false,
     "Train": true,
     "ImgChannels": 3,
