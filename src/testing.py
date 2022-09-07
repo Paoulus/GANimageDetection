@@ -39,19 +39,28 @@ if __name__ == '__main__':
 	starting_model.eval()
 
 	transforms = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
+		transforms.ToTensor(),
+		transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+	])
 
 	# here is using the default seed, meaning that we are testing on the same data we used for training (as a security check)
-	testing_db = TuningDatabaseWithRandomSampling(data_dir,transforms)
+	testing_db = TuningDatabaseWithRandomSampling(data_dir,transforms,seed=75089)
 	#testing_db = TestingDatabase(web_dir,transform=transforms)
+
+	real_images_count = 0
+	fake_images_count = 0
+	for path, label in testing_db:
+		if label == 0 : 
+			real_images_count += 1
+		else:
+			fake_images_count += 1
 
 	dataloader = DataLoader(testing_db,batch_size=batch_size,shuffle=True)
 
 	dictionary_dataloader = {"testing":dataloader}
 
 	print("Testing model with finetuned weights: {} on day {} ".format(finetuned_weights_path,datetime.now().strftime("%b %a %d at %H:%M:%S")))
+	print("Number of real images: {} fake images: {}",real_images_count,fake_images_count)
 
 	print("Going to test on: ")
 	for image_path, _ in testing_db.samples:
