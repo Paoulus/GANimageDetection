@@ -25,7 +25,7 @@ from torch.utils.data import DataLoader, Subset, random_split
 from torch.cuda import is_available as is_available_cuda
 from torch.cuda import empty_cache
 from torchvision import transforms
-from TuningDatabase import TuningDatabaseWithRandomSampling, TuningDatabaseFromSamples
+from TuningDatabase import TuningDatabaseFromFile, TuningDatabaseWithRandomSampling, TuningDatabaseFromSamples
 import csv
 import random
 
@@ -62,26 +62,21 @@ if __name__ == '__main__':
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
-    total_dataset = TuningDatabaseWithRandomSampling(input_folder,transforms,seed=451)
+    total_dataset = TuningDatabaseWithRandomSampling(input_folder,transforms,seed=13776321)
 
     for path,_ in total_dataset.samples:
         print(path)
-
-    train_proportion = int(len(total_dataset) * 0.8)
-    remaining_proportion = len(total_dataset) - train_proportion
-
-    validation_proportion = int(remaining_proportion * 0.5)
-    test_proportion = remaining_proportion - validation_proportion
-
-    random_test_set = random.Random(97234)
     
-    test_dataset_samples = random_test_set.sample(total_dataset.samples,test_proportion)
-    for el in test_dataset_samples:
-        total_dataset.samples.remove(el)
-    
-    test_dataset = TuningDatabaseFromSamples(test_dataset_samples,transforms)
+    test_dataset = TuningDatabaseFromFile("test-set-minuscule.txt")
+    for el in test_dataset.samples:
+        if el in total_dataset.samples:
+            total_dataset.samples.remove(el)
 
-    train_dataset,validation_dataset = random_split(total_dataset,[train_proportion,validation_proportion])
+    test_set_size = len(test_dataset.samples)
+    validation_set_size = int(test_set_size * 0.2 )
+    train_set_size = len(total_dataset.samples)-validation_set_size
+    
+    train_dataset,validation_dataset = random_split(total_dataset,[train_set_size,validation_set_size])
 
     databases = {
         'train': train_dataset,
@@ -125,7 +120,7 @@ if __name__ == '__main__':
 
     resnet_no_down_model = resnet50nodown(device_to_use, weights_path)
     print("Training started on {}".format(datetime.now().strftime("%b %a %d at %H:%M:%S")))
-    fine_tuned_model, accuracy_history = fineTune(resnet_no_down_model, dataloaders, device_to_use, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"],settings["PerformTesting"],checkpoints_path)
+    #fine_tuned_model, accuracy_history = fineTune(resnet_no_down_model, dataloaders, device_to_use, settings["Epochs"], settings["LearningRate"], settings["Classes"],resume_from_checkpoint,settings["PerformValidation"],settings["PerformTesting"],checkpoints_path)
     print("Training ended on {}".format(datetime.now().strftime("%b %a %d at %H:%M:%S")))
 
     testModel(fine_tuned_model,dataloaders,device_to_use)

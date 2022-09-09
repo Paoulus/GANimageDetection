@@ -118,3 +118,15 @@ class TuningDatabaseFromSamples(TuningDatabaseWithRandomSampling):
         self.classes = ["real","generated"]
         self.samples = samples
         self.transform = transform
+
+class TuningDatabaseFromFile(TuningDatabaseWithRandomSampling):
+    def __init__(self,samples_file_path,transform=None):
+        self.classes = ["real","generated"]
+        self.samples = []
+        self.transform = transform
+
+        with open(samples_file_path) as samples_file_desc:
+            for line in samples_file_desc:
+                label = 1 if ("StyleGAN" in line) or ("StyleGAN2" in line) else  0
+                item = line.strip("\n"), label
+                self.samples.append(item)
