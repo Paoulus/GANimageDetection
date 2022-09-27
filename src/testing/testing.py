@@ -1,10 +1,10 @@
 import argparse
 import datetime
 
-from verdeolivaFineTuning import testModel
-from resnet50nodown import *
+from main import testModel
+from verdeolivaNetwork import *
 from TestingDatabase import TestingDatabase
-from TuningDatabase import TuningDatabase,TuningDatabaseWithRandomSampling
+from Databases import TuningDatabaseWithRandomSampling
 from torch.utils.data import DataLoader
 from torchvision import transforms
 

@@ -18,7 +18,7 @@ import json
 import pandas as pd
 import numpy as np
 from PIL import Image
-from resnet50nodown import resnet50nodown
+from verdeolivaNetwork import resnet50nodown
 from torch import torch
 from torch import save as save_model
 import torch.nn as nn

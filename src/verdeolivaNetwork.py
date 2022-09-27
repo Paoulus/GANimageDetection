@@ -11,6 +11,8 @@
 # http://www.grip.unina.it/download/LICENSE_OPEN.txt
 #
 
+# contains the original network definition as defined in https://github.com/grip-unina/GANimageDetection
+
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
