@@ -1,15 +1,16 @@
 {
     "Model": "resnet50nodown",
-    "CheckpointPath": "checkpoints/",
+    "CheckpointPath": "/home/paolochiste/Repos/GANimageDetection/logs/10_30_17_44_40/checkpoints/checkpoint.pth_19.pth",
     "DatasetPath": "/media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/forensicsDatasets",
     "LoadCheckpoint": false,
     "Train": true,
     "ImgChannels": 3,
     "Classes": 2,
-    "LearningRate": 0.001,
+    "LearningRate": 0.0001,
     "BatchSize": 4,
-    "Epochs": 10,
+    "Epochs": 20,
     "PerformValidation":true,
     "PerformTesting":true,
-    "DatasetSizeLimit": 50000
+    "FakeSamplesAmount":10000,
+    "RealSamplesAmount":10000
 }

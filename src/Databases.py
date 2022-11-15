@@ -24,7 +24,7 @@ class TuningDatabase(datasets.DatasetFolder):
                             if (file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg"))  and (self.downsamplervariable % 1 == 0) and self.real_images_count < 50:
                                 item = os.path.join(root, file), 0
                                 self.samples.append(item)
-                                self.real_images_count += 1
+                                # self.real_images_count += 1
                             self.downsamplervariable += 1
                 elif (((entry == 'StyleGAN' or entry == 'StyleGAN2') and os.path.basename(path) == 'forensicsDatasets') or entry=='Fake' or entry=='1_Fake'):
                     exclude = set(['code', 'tmp', 'dataStyleGAN2'])
@@ -36,7 +36,7 @@ class TuningDatabase(datasets.DatasetFolder):
                             if (file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg")) and (self.downsamplervariable % 5 == 0) and self.fake_images_count < 50:
                                 item = os.path.join(root, file), 1
                                 self.samples.append(item)
-                                self.fake_images_count += 1
+                                # self.fake_images_count += 1
                             self.downsamplervariable += 1
         pass
 
@@ -130,3 +130,22 @@ class TuningDatabaseFromFile(TuningDatabaseWithRandomSampling):
                 label = 1 if ("StyleGAN" in line) or ("StyleGAN2" in line) else  0
                 item = line.strip("\n"), label
                 self.samples.append(item)
+
+class FolderDataset(TuningDatabaseWithRandomSampling):
+    def __init__(self,path,transform=None,label=0):
+        self.samples = []
+        self.classes = ["real","generated"]
+        self.transform = transform
+        self.folder = path
+
+        for root_1, dirs_1, files_1 in os.walk(path, topdown=True):
+            for file in sorted(files_1):
+                item = os.path.join(root_1,file),label
+                self.samples.append(item)
+        
+def generateRandomSubsetToFile(dataset_path,size,dest_path):
+    total_database = TuningDatabase(dataset_path)
+    random_subset_samples = random.sample(total_database.samples,size)
+    with open(dest_path,"w") as dest_file:
+        for el in random_subset_samples:
+            dest_file.write(el[0] + "\n")

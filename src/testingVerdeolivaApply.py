@@ -2,7 +2,7 @@ import argparse
 from cgi import test
 
 from main import testModel
-from resnet50nodown import *
+from verdeolivaNetwork import *
 from TestingDatabase import TestingDatabase
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     config = parser.parse_args()
     data_dir = "/media/antoniostefani/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/forensicsDatasets"
-    test_dir = "/home/paolochiste/Samples-to-test/Samples-To-Test-Finetuned/Samples/"
+    test_dir = "/home/paolochiste/postsocial-samples/Samples/"
     weights_path = config.weights_path
 
     starting_model = resnet50nodown(device, weights_path)
@@ -39,8 +39,8 @@ if __name__ == '__main__':
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
-    testing_db = TuningDatabaseWithRandomSampling(data_dir,seed=451)
-    #testing_db = TestingDatabase(test_dir)
+    #testing_db = TuningDatabaseWithRandomSampling(data_dir,seed=451)
+    testing_db = TestingDatabase(test_dir)
 
     images_used_for_testing = []
 
