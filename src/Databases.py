@@ -81,9 +81,8 @@ class TuningDatabaseWithRandomSampling(datasets.DatasetFolder):
                             self.downsamplervariable += 1
                     self.real_images = rand_generator.sample(self.real_images,real_amount)
                 elif (((entry == 'StyleGAN' or entry == 'StyleGAN2') and os.path.basename(path) == 'forensicsDatasets') or entry=='Fake' or entry=='1_Fake'):
-                    exclude = set(['code', 'tmp', 'dataStyleGAN2'])
+                    exclude = set(['code', 'tmp', 'dataStyleGAN2', 'StyleGAN3'])
                     files_in_folder = []
-                    # exclude = set(['StyleGAN', 'StyleGAN2'])
                     for root, dirs, files in os.walk(data_folder, topdown=True):
                         dirs[:] = [d for d in dirs if d not in exclude]
                         self.downsamplervariable += 0
@@ -93,8 +92,9 @@ class TuningDatabaseWithRandomSampling(datasets.DatasetFolder):
                                 files_in_folder.append(item)
                                 self.fake_images_count += 1
                             self.downsamplervariable += 1
-                    self.fake_images.extend(rand_generator.sample(files_in_folder,fake_amount//2))
-            
+                            self.fake_images.extend(files_in_folder)
+        
+        self.fake_images = rand_generator.sample(self.fake_images,fake_amount)
         self.samples = self.real_images + self.fake_images
 
 

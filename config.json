@@ -1,7 +1,7 @@
 {
     "Model": "resnet50nodown",
     "CheckpointPath": "/home/paolochiste/Repos/GANimageDetection/logs/10_30_17_44_40/checkpoints/checkpoint.pth_19.pth",
-    "DatasetPath": "/media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/forensicsDatasets",
+    "DatasetPath": "/media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/Shared_Dataset",
     "LoadCheckpoint": false,
     "Train": true,
     "ImgChannels": 3,
@@ -12,5 +12,6 @@
     "PerformValidation":true,
     "PerformTesting":true,
     "FakeSamplesAmount":10000,
-    "RealSamplesAmount":10000
+    "RealSamplesAmount":10000,
+    "finetunedWeightsFilename":"ft-shared-dataset.pth"
 }

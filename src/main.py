@@ -307,12 +307,13 @@ if __name__ == '__main__':
     input_folder = settings_json["DatasetPath"]
     resume_from_checkpoint = settings_json["LoadCheckpoint"]
     batch_size = settings_json["BatchSize"]
-    
+    finetuned_weights_filename = settings_json["finetunedWeightsFilename"]
+
     # generate folder names and paths for the current execution report folder
     today = datetime.now()
     date_folder = today.strftime("%m_%d_%H_%M_%S")
     logs_folder = os.path.join("logs",date_folder)
-    finetuned_weights_path = os.path.join(logs_folder,"finetuned_weights.pth")
+    finetuned_weights_path = os.path.join(logs_folder,finetuned_weights_filename)
     checkpoints_path = os.path.join(logs_folder,"checkpoints")
 
     if not os.path.exists(logs_folder):
@@ -321,7 +322,8 @@ if __name__ == '__main__':
     # load dataset and setup dataloaders and transforms (dataloader is used for batching)
     transform_convert_and_normalize = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        transforms.Resize([1024,1024])
     ])
 
     total_dataset = TuningDatabaseWithRandomSampling(input_folder,transform_convert_and_normalize,seed=13776321,
@@ -331,17 +333,17 @@ if __name__ == '__main__':
     for path,_ in total_dataset.samples:
         print(path)
     
-    test_dataset = TuningDatabaseFromFile("testing-2000-elements.txt",transform=transform_convert_and_normalize)
+    test_dataset = TuningDatabaseFromFile("test-200-only-sharedDataset.txt",transform=transform_convert_and_normalize)
     for el in test_dataset.samples:
         if el in total_dataset.samples:
             total_dataset.samples.remove(el)
 
-    validation_dataset = TuningDatabaseFromFile("validation-2000-elements.txt",transform=transform_convert_and_normalize)
+    validation_dataset = TuningDatabaseFromFile("validation-200-only-sharedDataset.txt",transform=transform_convert_and_normalize)
     for el in validation_dataset.samples:
         if el in total_dataset.samples:
             total_dataset.samples.remove(el)
 
-    test_set_size = len(test_dataset.samples)
+    #test_set_size = len(test_dataset.samples)
     #validation_set_size = int(test_set_size * 0.1 )
     #validation_set_size = 200
     #train_set_size = len(total_dataset.samples)-validation_set_size
@@ -400,7 +402,8 @@ if __name__ == '__main__':
     fine_tuned_model, training_loss_history, validation_loss_history = fineTune(resnet_no_down_model,dataloaders,configuration)
     #print("Training ended to test parameters on {}".format(datetime.datetime.now().strftime("%b %a %d at %H:%M:%S")))
 
-    testModel(fine_tuned_model,dataloaders,configuration['device'])
+    if settings_json["PerformTesting"] :
+        testModel(fine_tuned_model,dataloaders,configuration['device'])
 
     print("Checkpoints are located at {}".format(checkpoints_path))
     print("Saving fine-tuned model (most recent checkpoint) in {}".format(finetuned_weights_path))
