@@ -14,6 +14,7 @@ class TuningDatabase(datasets.DatasetFolder):
         self.downsamplervariable = 0
         self.real_images_count = 0
         self.fake_images_count = 0
+        self.root = path
 
         for root_1, dirs_1, files_1 in os.walk(path, topdown=True):
             for entry in dirs_1:
@@ -65,6 +66,7 @@ class TuningDatabaseWithRandomSampling(datasets.DatasetFolder):
         self.fake_images_count = 0
         self.fake_images = []
         self.real_images = []
+        self.root = path
 
         rand_generator = random.Random(seed)
 
@@ -136,7 +138,7 @@ class FolderDataset(TuningDatabaseWithRandomSampling):
         self.samples = []
         self.classes = ["real","generated"]
         self.transform = transform
-        self.folder = path
+        self.root = path
 
         for root_1, dirs_1, files_1 in os.walk(path, topdown=True):
             for file in sorted(files_1):

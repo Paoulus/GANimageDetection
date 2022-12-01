@@ -1,0 +1,46 @@
+Dataset FolderDataset
+    Number of datapoints: 80
+    Root location: /home/paolochiste/postsocial-samples/Samples/WhichFaceIsReal_Real 100.0
+--------------Dataset FolderDataset
+    Number of datapoints: 32
+    Root location: /home/paolochiste/postsocial-samples/Samples/Facebook 96.875
+--------------Dataset FolderDataset
+    Number of datapoints: 33
+    Root location: /home/paolochiste/postsocial-samples/Samples/Whatsapp 100.0
+--------------Dataset FolderDataset
+    Number of datapoints: 6
+    Root location: /home/paolochiste/postsocial-samples/Samples/Slack 100.0
+--------------Dataset FolderDataset
+    Number of datapoints: 30
+    Root location: /home/paolochiste/postsocial-samples/Samples/Telegram/WhichFaceIsReal_Real 100.0
+--------------Dataset FolderDataset
+    Number of datapoints: 80
+    Root location: /home/paolochiste/postsocial-samples/Samples/This-Person-Does-Not-Exist 11.25
+--------------Dataset FolderDataset
+    Number of datapoints: 80
+    Root location: /home/paolochiste/postsocial-samples/Samples/ThisPersonDoesNotExist 11.25
+--------------Dataset FolderDataset
+    Number of datapoints: 30
+    Root location: /home/paolochiste/postsocial-samples/Samples/Telegram/WhichFaceIsReal_Fake 93.33333333333333
+--------------Dataset FolderDataset
+    Number of datapoints: 80
+    Root location: /home/paolochiste/postsocial-samples/Samples/WhichFaceIsReal_Fake 55.00000000000001
+--------------Dataset FolderDataset
+    Number of datapoints: 30
+    Root location: /home/paolochiste/postsocial-samples/Samples/Telegram/This-Person-Does-Not-Exist 6.666666666666667
+--------------Dataset FolderDataset
+    Number of datapoints: 30
+    Root location: /home/paolochiste/postsocial-samples/Samples/Telegram/ThisPersonDoesNotExist 13.333333333333334
+--------------Dataset FolderDataset
+    Number of datapoints: 30
+    Root location: /home/paolochiste/postsocial-samples/Samples/Telegram/WhichFaceIsReal_Fake 93.33333333333333
+--------------Dataset TuningDatabaseWithRandomSampling
+    Number of datapoints: 120
+    Root location: /media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/forensicsDatasets 92.5
+--------------Dataset TuningDatabaseWithRandomSampling
+    Number of datapoints: 120
+    Root location: /media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/Shared_Dataset 97.5
+--------------Dataset TuningDatabaseWithRandomSampling
+    Number of datapoints: 120
+    Root location: /media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/Telegram 86.66666666666667
+--------------

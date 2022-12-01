@@ -6,12 +6,12 @@
     "Train": true,
     "ImgChannels": 3,
     "Classes": 2,
-    "LearningRate": 0.0001,
+    "LearningRate": 0.000000001,
     "BatchSize": 4,
     "Epochs": 20,
     "PerformValidation":true,
-    "PerformTesting":true,
-    "FakeSamplesAmount":10000,
-    "RealSamplesAmount":10000,
-    "finetunedWeightsFilename":"ft-shared-dataset.pth"
+    "PerformTesting":false,
+    "FakeSamplesAmount":100,
+    "RealSamplesAmount":100,
+    "finetunedWeightsFilename":"ft-postsoc-from-presoc-linear-lr.pth"
 }

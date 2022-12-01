@@ -39,6 +39,7 @@ def fineTune(model, database, configuration):
         loss_fn = nn.CrossEntropyLoss()
 
     model = model.change_output(configuration['num_classes'])
+    model.load_state_dict(torch.load("/home/paolochiste/Repos/GANimageDetection/logs/10_30_17_44_40/ft-weights-presocial.pth"))
     model = model.to(configuration['device'])
     optimizer = optim.Adam(model.parameters(), lr=configuration['learning_rate'])
 
@@ -52,8 +53,7 @@ def fineTune(model, database, configuration):
     for param in model.parameters():
         param.requires_grad = False;
 
-    for fc_param in model.fc.parameters():
-        fc_param.requires_grad = True;
+    model.fc.requires_grad_(True)
 
     print("Learning rate is: {}".format(configuration["learning_rate"]))
     print("Using {} epochs".format(configuration["epochs"]))
@@ -87,7 +87,7 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
     checkpoints_file_name = os.path.join(checkpoints_path,"checkpoint.pth")
 
     #scheduler = optim.lr_scheduler.StepLR(optimizer,step_size=10,gamma=0.01,verbose=True)
-    scheduler = optim.lr_scheduler.CyclicLR(optimizer,base_lr=0.00001,max_lr=0.001,cycle_momentum=False)
+    #scheduler = optim.lr_scheduler.CyclicLR(optimizer,base_lr=0.00001,max_lr=0.001,cycle_momentum=False)
 
     for epoch in range(0,epochs):
         print('Epoch {}/{}'.format(epoch,epochs - 1))
@@ -157,7 +157,6 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
-                        scheduler.step()
 
             epoch_acc = running_corrects / len(dataloader[phase].dataset)
             epoch_loss = running_loss / len(dataloader[phase].dataset)

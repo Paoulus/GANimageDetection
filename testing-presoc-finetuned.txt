@@ -1,0 +1,12 @@
+Dataset TuningDatabaseWithRandomSampling
+    Number of datapoints: 120
+    Root location: /media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/forensicsDatasets 86.66666666666667
+--------------
+Dataset TuningDatabaseWithRandomSampling
+    Number of datapoints: 120
+    Root location: /media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/Shared_Dataset 95.0
+--------------
+Dataset TuningDatabaseWithRandomSampling
+    Number of datapoints: 120
+    Root location: /media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/Telegram 75.83333333333333
+--------------

@@ -12,7 +12,7 @@ from torchvision import transforms
 batch_size = 1
 num_classes = 2
 
-device = "cuda:0"
+device = "cuda:1"
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(
@@ -35,13 +35,14 @@ if __name__ == '__main__':
 	starting_model.change_output(2)
 	starting_model.fc.to(device)
 
-	finetuned_weights_path = "/home/paolochiste/Repos/GANimageDetection/logs/10_30_17_44_40/finetuned_weights.pth"
+	finetuned_weights_path = "logs/11_30_21_24_09/ft-postsoc-from-presoc-linear-lr.pth"
 	starting_model.load_state_dict(torch.load(finetuned_weights_path))
 	starting_model.eval()
 
 	transforms = transforms.Compose([
 		transforms.ToTensor(),
-		transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+		transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+		transforms.Resize([1024,1024])
 	])
 
 	# here is using the default seed, meaning that we are testing on the same data we used for training (as a security check)
@@ -67,11 +68,11 @@ if __name__ == '__main__':
 	for image_path, _ in testing_db.samples:
 		print(image_path)
 
-	folders_real = []
-	folders_fake = ["Telegram/WhichFaceIsReal_Fake"]
 	folder_dataloaders = []
 
-	"""
+	folders_real = ["WhichFaceIsReal_Real","Facebook","Whatsapp","Slack","Telegram/WhichFaceIsReal_Real","TelegramProfilo"]
+	folders_fake = ["This-Person-Does-Not-Exist","ThisPersonDoesNotExist","Telegram/WhichFaceIsReal_Fake","WhichFaceIsReal_Fake","Telegram/This-Person-Does-Not-Exist","Telegram/ThisPersonDoesNotExist","Telegram/WhichFaceIsReal_Fake"]
+	
 	for folder in folders_real:
 		folder = os.path.join(postsocial_dir,folder)
 		folder_dataloaders.append(DataLoader(FolderDataset(folder,transforms,0),batch_size=batch_size))
@@ -79,11 +80,24 @@ if __name__ == '__main__':
 	for folder in folders_fake:
 		folder = os.path.join(postsocial_dir,folder)
 		folder_dataloaders.append(DataLoader(FolderDataset(folder,transforms,1),batch_size=batch_size))
-	"""
-
-	#folder_dataloaders.append(DataLoader(TuningDatabaseWithRandomSampling("/media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/forensicsDatasets",transform=transforms,real_amount=60,fake_amount=60),batch_size=1))
+	
+	
+	folder_dataloaders.append(DataLoader(TuningDatabaseWithRandomSampling("/media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/forensicsDatasets",transform=transforms,real_amount=60,fake_amount=60),batch_size=1))
 	folder_dataloaders.append(DataLoader(TuningDatabaseWithRandomSampling("/media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/Shared_Dataset",transform=transforms,real_amount=60,fake_amount=60),batch_size=1))
+	
+	folder_dataloaders.append(DataLoader(TuningDatabaseWithRandomSampling("/media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/Telegram",transform=transforms,real_amount=60,fake_amount=60),batch_size=1))
+
+
+	output_file = open("testing-post-social-from-pre-2.txt",'w')
 
 	for folder_dataloader in folder_dataloaders:
-		accuracy_on_folder = test_on_folder(starting_model,folder_dataloader,transforms,device)
-		print(str(accuracy_on_folder * 100))
+		if len(folder_dataloader.dataset.samples) > 0:
+			accuracy_on_folder = test_on_folder(starting_model,folder_dataloader,transforms,device)
+			name = str(folder_dataloader.dataset)
+			line = name + " " + str(accuracy_on_folder * 100) + "\n--------------\n" 
+			print(line)
+			output_file.write(line)
+		else:
+			print ("Dataloader" + str(folder_dataloader) + "has zero samples. Check folder path.")
+	
+	output_file.close()
