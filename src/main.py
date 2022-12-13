@@ -39,7 +39,7 @@ def fineTune(model, database, configuration):
         loss_fn = nn.CrossEntropyLoss()
 
     model = model.change_output(configuration['num_classes'])
-    model.load_state_dict(torch.load("/home/paolochiste/Repos/GANimageDetection/logs/10_30_17_44_40/ft-weights-presocial.pth"))
+    model.load_state_dict(torch.load("/home/paolo/Tesi Magistrale Materiale/Repos/GANimageDetection/logs/10_30_17_44_40/ft-weights-presocial.pth"))
     model = model.to(configuration['device'])
     optimizer = optim.Adam(model.parameters(), lr=configuration['learning_rate'])
 
@@ -86,8 +86,7 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
 
     checkpoints_file_name = os.path.join(checkpoints_path,"checkpoint.pth")
 
-    #scheduler = optim.lr_scheduler.StepLR(optimizer,step_size=10,gamma=0.01,verbose=True)
-    #scheduler = optim.lr_scheduler.CyclicLR(optimizer,base_lr=0.00001,max_lr=0.001,cycle_momentum=False)
+    batches_to_accumulate = 4
 
     for epoch in range(0,epochs):
         print('Epoch {}/{}'.format(epoch,epochs - 1))
@@ -115,8 +114,6 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
                 batch_number = batch_number + 1
 
                 with torch.set_grad_enabled(phase=="train"):
-                    optimizer.zero_grad()
-
                     image = image.to(device)
                     # apply model; we use the same snipped as the one in model.apply, but with grad_enabled since we want
                     # the gradient for backpropagation
@@ -150,13 +147,19 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
 
                     loss = loss_fn(pred_squeezed, target)
 
+                    # loss is normalized over accumulation size
+                    loss = loss / batches_to_accumulate
+
                     print("Epoch {}, Batch {} -- {}, Accuracy: {:.4f}, Loss: {:.4f}".format(epoch,batch_number,phase,accuracy,loss.item()))
 
                     running_loss += loss.item()  * image.size(0)
 
                     if phase == 'train':
                         loss.backward()
-                        optimizer.step()
+                        
+                        if (batch_number % batches_to_accumulate) == 0:
+                            optimizer.step()
+                            optimizer.zero_grad()
 
             epoch_acc = running_corrects / len(dataloader[phase].dataset)
             epoch_loss = running_loss / len(dataloader[phase].dataset)

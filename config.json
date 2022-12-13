@@ -1,17 +1,17 @@
 {
     "Model": "resnet50nodown",
     "CheckpointPath": "/home/paolochiste/Repos/GANimageDetection/logs/10_30_17_44_40/checkpoints/checkpoint.pth_19.pth",
-    "DatasetPath": "/media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/Shared_Dataset",
+    "DatasetPath": "/home/paolo/Tesi Magistrale Materiale/Repos/GANimageDetection/fake_dataset/",
     "LoadCheckpoint": false,
     "Train": true,
     "ImgChannels": 3,
     "Classes": 2,
-    "LearningRate": 0.000000001,
-    "BatchSize": 4,
-    "Epochs": 20,
-    "PerformValidation":true,
+    "LearningRate": 0.0001,
+    "BatchSize": 1,
+    "Epochs": 2,
+    "PerformValidation":false,
     "PerformTesting":false,
-    "FakeSamplesAmount":100,
-    "RealSamplesAmount":100,
-    "finetunedWeightsFilename":"ft-postsoc-from-presoc-linear-lr.pth"
+    "FakeSamplesAmount":2,
+    "RealSamplesAmount":2,
+    "finetunedWeightsFilename":"ft-testing-gradient-accumulation.pth"
 }
