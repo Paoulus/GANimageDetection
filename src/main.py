@@ -39,7 +39,7 @@ def fineTune(model, database, configuration):
         loss_fn = nn.CrossEntropyLoss()
 
     model = model.change_output(configuration['num_classes'])
-    model.load_state_dict(torch.load("/home/paolo/Tesi Magistrale Materiale/Repos/GANimageDetection/logs/10_30_17_44_40/ft-weights-presocial.pth"))
+    # model.load_state_dict(torch.load("/home/paolo/Tesi Magistrale Materiale/Repos/GANimageDetection/logs/10_30_17_44_40/ft-weights-presocial.pth"))
     model = model.to(configuration['device'])
     optimizer = optim.Adam(model.parameters(), lr=configuration['learning_rate'])
 
@@ -309,12 +309,13 @@ if __name__ == '__main__':
     input_folder = settings_json["DatasetPath"]
     resume_from_checkpoint = settings_json["LoadCheckpoint"]
     batch_size = settings_json["BatchSize"]
+    logs_base_path = settings_json["LogsPath"]
     finetuned_weights_filename = settings_json["finetunedWeightsFilename"]
 
     # generate folder names and paths for the current execution report folder
     today = datetime.now()
     date_folder = today.strftime("%m_%d_%H_%M_%S")
-    logs_folder = os.path.join("logs",date_folder)
+    logs_folder = os.path.join(logs_base_path,date_folder)
     finetuned_weights_path = os.path.join(logs_folder,finetuned_weights_filename)
     checkpoints_path = os.path.join(logs_folder,"checkpoints")
 
@@ -335,12 +336,15 @@ if __name__ == '__main__':
     for path,_ in total_dataset.samples:
         print(path)
     
-    test_dataset = TuningDatabaseFromFile("test-200-only-sharedDataset.txt",transform=transform_convert_and_normalize)
+    test_catalogue = settings_json["testDatasetCatalogue"]
+    val_catalogue = settings_json["validationDatasetCatalogue"]
+
+    test_dataset = TuningDatabaseFromFile(test_catalogue,transform=transform_convert_and_normalize)
     for el in test_dataset.samples:
         if el in total_dataset.samples:
             total_dataset.samples.remove(el)
 
-    validation_dataset = TuningDatabaseFromFile("validation-200-only-sharedDataset.txt",transform=transform_convert_and_normalize)
+    validation_dataset = TuningDatabaseFromFile(val_catalogue,transform=transform_convert_and_normalize)
     for el in validation_dataset.samples:
         if el in total_dataset.samples:
             total_dataset.samples.remove(el)

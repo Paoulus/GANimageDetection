@@ -81,6 +81,7 @@ class TuningDatabaseWithRandomSampling(datasets.DatasetFolder):
                                 self.real_images.append(item)
                                 self.real_images_count += 1
                             self.downsamplervariable += 1
+                    real_amount = min(real_amount,len(self.real_images))
                     self.real_images = rand_generator.sample(self.real_images,real_amount)
                 elif (((entry == 'StyleGAN' or entry == 'StyleGAN2')) or entry=='Fake' or entry=='1_Fake'):
                     exclude = set(['code', 'tmp', 'dataStyleGAN2', 'StyleGAN3'])
@@ -96,6 +97,7 @@ class TuningDatabaseWithRandomSampling(datasets.DatasetFolder):
                             self.downsamplervariable += 1
                             self.fake_images.extend(files_in_folder)
         
+        fake_amount = min(fake_amount,len(self.fake_images))
         self.fake_images = rand_generator.sample(self.fake_images,fake_amount)
         self.samples = self.real_images + self.fake_images
 

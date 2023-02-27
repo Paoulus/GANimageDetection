@@ -1,13 +1,14 @@
+# vscode and IDE generated folders
 __pycache__
 .idea
+.vscode
+
+# folder containing verdoliva weights. assuming it's contained in the repo, we avoid
+# committing it, since it's quite big. Same thing for the checkpoint folder
 weights
-fake_dataset
+checkpoints
+
+# ignoring other weights files and log files
 *.pth
 *.csv
-checkpoints
-DatasetFast
-nohup.out
-output.log
-Acc_Loss.txt
 *.log
-.vscode
