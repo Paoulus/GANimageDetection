@@ -10,25 +10,27 @@
 # (included in this package) and online at
 # http://www.grip.unina.it/download/LICENSE_OPEN.txt
 #
-from datetime import datetime
 import time
 import os
 import argparse
 import json
 import pandas as pd
-import numpy as np
-from PIL import Image
-from verdeolivaNetwork import resnet50nodown
-from torch import torch
-from torch import save as save_model
 import torch.nn as nn
 import tqdm as tqdm
 import torch.optim as optim
+import numpy as np
+
+from datetime import datetime
+from PIL import Image
+from torch import torch
+from torch import save as save_model
 from torch.utils.data import DataLoader, Subset, random_split
 from torch.cuda import is_available as is_available_cuda
 from torchvision import transforms
-from Databases import TuningDatabaseFromFile, TuningDatabaseWithRandomSampling, TuningDatabaseFromSamples
 from sklearn.metrics import confusion_matrix
+
+from verdeolivaNetwork import resnet50nodown
+from Databases import TuningDatabaseFromFile, TuningDatabaseWithRandomSampling
 
 # return a fine-tuned version of the original resnet50 model
 # by default num_classes is = 1, since it's specified like that in the original code
@@ -264,31 +266,6 @@ def testModel(model,dataloaders,device):
             print(f'Got Real: {zerocorrect} / {zerosamples} with accuracy {float(zerocorrect)/float(zerosamples)*100:.2f} \n')
         if onesamples > 0:
             print(f'Got Fake: {onecorrect} / {onesamples} with accuracy {float(onecorrect)/float(onesamples)*100:.2f} \n')
-    
-def test_on_folder(model,folder_dataloader,transforms,device):
-    accuracy = 0
-
-    model.to(device)
-    model.eval()
-
-    num_correct = 0
-    num_samples = len(folder_dataloader)
-    with torch.no_grad():
-        with tqdm.tqdm(folder_dataloader, unit="batch") as tbatch:
-            for batch_idx, (x, y) in enumerate(tbatch):
-                x = x.to(device)
-                y = y.to(device)
-
-                scores = model(x)
-                _ , prediction = scores.max(1)
-                if prediction == y.item():
-                    num_correct += 1
-
-                print(str(folder_dataloader.dataset.samples[batch_idx]) + "label: " + str(y.item()) + "predicted: " + str(prediction))
-
-    accuracy = num_correct / num_samples
-
-    return accuracy
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

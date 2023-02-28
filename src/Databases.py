@@ -1,6 +1,5 @@
 import random
 
-from torch.utils.data import Dataset
 from torchvision import datasets
 import os
 from PIL import Image
