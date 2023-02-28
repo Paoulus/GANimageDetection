@@ -349,13 +349,6 @@ if __name__ == '__main__':
         if el in total_dataset.samples:
             total_dataset.samples.remove(el)
 
-    #test_set_size = len(test_dataset.samples)
-    #validation_set_size = int(test_set_size * 0.1 )
-    #validation_set_size = 200
-    #train_set_size = len(total_dataset.samples)-validation_set_size
-    
-    #train_dataset,validation_dataset = random_split(total_dataset,[train_set_size,validation_set_size])
-
     train_dataset = total_dataset
 
     databases = {

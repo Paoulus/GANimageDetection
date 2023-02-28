@@ -1,6 +1,8 @@
 #/bin/sh
-export VIRTUAL_ENV=/home/paolochiste/pytorch-venv/
-export PATH=/home/paolochiste/pytorch-venv/bin:$PATH
+export VIRTUAL_ENV=/home/paolo/venvs-python/pytorch-resnet-venv/
+export PATH=/home/paolo/venvs-python/pytorch-resnet-venv/bin/:$PATH
 export CUDNN_CONV_WSCAP_DBG=4096
-nohup python -u src/main.py --device=cuda:0 > output-param-search-linear-lr.log &
+log_file_path="output-param-search-linear-lr.log"
+date > $log_file_path
+nohup python -u src/main.py --device=cpu -c "" >> $log_file_path &
 echo "Launched script."
