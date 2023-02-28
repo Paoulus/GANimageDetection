@@ -1,12 +1,12 @@
 import argparse
-from cgi import test
 
+from cgi import test
 from main import testModel
 from verdeolivaNetwork import *
-from TestingDatabase import TestingDatabase
+from testing.testingDatabase import TestingDatabase
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from Databases import TuningDatabaseWithRandomSampling
+from tuningDatabase import TuningDatabaseWithRandomSampling
 
 batch_size = 2
 num_classes = 2

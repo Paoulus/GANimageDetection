@@ -1,8 +1,6 @@
-import random
-
-from torch.utils.data import Dataset
-from torchvision import datasets
 import os
+
+from torchvision import datasets
 from PIL import Image
 
 class TestingDatabase(datasets.DatasetFolder):

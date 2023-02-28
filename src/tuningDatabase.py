@@ -1,7 +1,7 @@
 import random
+import os
 
 from torchvision import datasets
-import os
 from PIL import Image
 
 class TuningDatabase(datasets.DatasetFolder):

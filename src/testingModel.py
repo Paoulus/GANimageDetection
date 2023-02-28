@@ -2,41 +2,18 @@ import argparse
 import datetime
 import os
 
-from verdeolivaNetwork import *
-from testing.TestingDatabase import TestingDatabase
-from Databases import TuningDatabaseWithRandomSampling,FolderDataset
 from torch.utils.data import DataLoader
 from torchvision import transforms
+
+from verdeolivaNetwork import *
+from testing.testingDatabase import TestingDatabase
+from testing.testingUtils import test_on_folder
+from tuningDatabase import TuningDatabaseWithRandomSampling,FolderDataset
 
 batch_size = 1
 num_classes = 2
 
 device = "cpu"
-
-def test_on_folder(model,folder_dataloader,transforms,device):
-    accuracy = 0
-
-    model.to(device)
-    model.eval()
-
-    num_correct = 0
-    num_samples = len(folder_dataloader)
-    with torch.no_grad():
-        with tqdm.tqdm(folder_dataloader, unit="batch") as tbatch:
-            for batch_idx, (x, y) in enumerate(tbatch):
-                x = x.to(device)
-                y = y.to(device)
-
-                scores = model(x)
-                _ , prediction = scores.max(1)
-                if prediction == y.item():
-                    num_correct += 1
-
-                print(str(folder_dataloader.dataset.samples[batch_idx]) + "label: " + str(y.item()) + "predicted: " + str(prediction))
-
-    accuracy = num_correct / num_samples
-
-    return accuracy
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(
