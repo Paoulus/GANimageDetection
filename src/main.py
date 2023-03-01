@@ -33,9 +33,9 @@ def fineTune(model, database, configuration):
     if configuration["num_classes"] < 2 :
         loss_fn = nn.BCEWithLogitsLoss()
     else:
+        model = model.change_output(configuration['num_classes'])
         loss_fn = nn.CrossEntropyLoss()
 
-    model = model.change_output(configuration['num_classes'])
     
     if(configuration["finetuned_weights_to_load"] != None):
         model.load_state_dict(torch.load("/home/paolo/Tesi Magistrale Materiale/Repos/GANimageDetection/logs/10_30_17_44_40/ft-weights-presocial.pth"))
@@ -86,7 +86,7 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
 
     checkpoints_file_name = os.path.join(checkpoints_path,"checkpoint.pth")
 
-    batches_to_accumulate = 4
+    batches_to_accumulate = 1
 
     for epoch in range(0,epochs):
         print('Epoch {}/{}'.format(epoch,epochs - 1))
@@ -134,6 +134,9 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
                     target = target.to(device)
 
                     predictions = pred_squeezed.argmax(dim=1, keepdim=True).squeeze()
+
+                    if model.fc.out_features == 1:
+                        pred_squeezed = pred_squeezed.squeeze(dim=1)
                     
                     zerosamples += len(target[target==0])
                     zerocorrect += (target[target==predictions]==0).sum().item()
@@ -237,7 +240,7 @@ if __name__ == '__main__':
     transform_convert_and_normalize = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-        # transforms.Resize([1024,1024])
+        #transforms.Resize([256,256])
     ])
 
     total_dataset = TuningDatabaseWithRandomSampling(input_folder,transform_convert_and_normalize,seed=13776321,
@@ -299,7 +302,7 @@ if __name__ == '__main__':
     configuration = {
                 "checkpoints_path_loading":settings_json_checkpoint_path,
                 "checkpoints_path_writing":checkpoints_path,
-                "num_classes":2,
+                "num_classes":settings_json["Classes"],
                 "device":device_to_use,
                 "perform_validation":settings_json["PerformValidation"],
                 "perform_testing":settings_json["PerformTesting"],
