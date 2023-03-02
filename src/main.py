@@ -64,11 +64,11 @@ def fineTune(model, database, configuration):
     required_epochs = configuration["epochs"] - checkpoint_epoch
 
     training_start = time.time()
-    training_loss_history,validation_loss_history = train_loop(model, database, loss_fn, optimizer, configuration['device'], 
-                                                                        required_epochs, 
-                                                                        configuration['perform_validation'], 
-                                                                        configuration['perform_testing'],
-                                                                        configuration['checkpoints_path_writing'])
+    training_loss_history,validation_loss_history = train_loop(model, database, loss_fn, optimizer, 
+                                                                    configuration['device'], 
+                                                                    required_epochs, 
+                                                                    configuration['perform_validation'], 
+                                                                    configuration['checkpoints_path_writing'])
     training_end = time.time()
 
     train_min = (training_end - training_start) // 60
@@ -77,7 +77,7 @@ def fineTune(model, database, configuration):
 
     return model, training_loss_history, validation_loss_history
 
-def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_validation, perform_testing,checkpoints_path):
+def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_validation,checkpoints_path):
     val_loss_history = []
     training_loss_history = []
 
@@ -129,7 +129,7 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
                     if model.fc.out_features == 1:
                         target = target.to(dtype=torch.float32)
                         for index in range(0,target.size()[0]):
-                            target[index] = 1.0 if target[index] == 0 else -1.0
+                            target[index] = 0.0 if target[index] == 0 else 1.0
                     
                     target = target.to(device)
 
@@ -193,7 +193,6 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
                 }, checkpoints_file_name + "_" + str(epoch) + ".pth")
         except OSError:
             print("Could not write checkpoint on epoch {}. Will write the next one.".format(epoch))
-        #scheduler.step() used for simpler schedulers (cyclic ones step on each batch instead)
 
         print('Epoch took {:.0f} minutes, {:.0f} seconds.'.format(
                 epoch_duration // 60,
@@ -279,7 +278,7 @@ if __name__ == '__main__':
     # sample just to read the label
     real_images_count = 0
     fake_images_count = 0
-    
+    # TODO: Fix real_images and fake_images count, since right now they do nothing
     print("TRAINING INFO")
     print(f"Using device {device_to_use}")
     print("Dataset located at: {}".format(input_folder))
