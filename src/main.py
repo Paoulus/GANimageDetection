@@ -27,6 +27,18 @@ from verdeolivaNetwork import resnet50nodown
 from tuningDatabase import TuningDatabaseFromFile, TuningDatabaseWithRandomSampling
 from testing.testingUtils import testModel
 
+# new weights for the model should only affect the fc (fully connected) layer since we are
+# doing finetuning
+def areNewWeightsValidForFinetuning(model,new_weights):
+    areValid = True
+    model_dict = model.state_dict()
+    for key in model_dict.keys():
+        if ("weight" in key) and ("fc" not in key):
+            if not (torch.all(model_dict[key].eq(new_weights[key])).item()):
+                areValid = False
+    
+    return areValid
+
 # return a fine-tuned version of the original resnet50 model
 # by default num_classes is = 1, since it's specified like that in the original code
 def fineTune(model, database, configuration, train_loss_fd,val_loss_fd):
@@ -41,11 +53,20 @@ def fineTune(model, database, configuration, train_loss_fd,val_loss_fd):
     required_epochs = configuration["epochs"]
     if resume_from_checkpoint:
         checkpoint = torch.load(os.path.join(configuration['checkpoints_path_loading']))
-        model.load_state_dict(checkpoint['model_state_dict'])
+        if(areNewWeightsValidForFinetuning(model,checkpoint['model_state_dict'])):
+            model.load_state_dict(checkpoint['model_state_dict'])
+        else:
+            print("Error! The weights in the checkpoint are not valid. Aborting...")
+            return
+
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         required_epochs -= checkpoint['epoch']
     elif(configuration["finetuned_weights_to_load"] != None):
-        model.load_state_dict(torch.load(configuration["finetuned_weights_to_load"]))
+        if(areNewWeightsValidForFinetuning(model,torch.load(configuration["finetuned_weights_to_load"]))):
+            model.load_state_dict(torch.load(configuration["finetuned_weights_to_load"]))
+        else:
+            print("Error! The weights in the checkpoint are not valid. Aborting...")
+            return
 
     model = model.to(configuration['device'])
     
@@ -304,7 +325,7 @@ if __name__ == '__main__':
                 "learning_rate":settings_json["LearningRate"],
                 "epochs":settings_json["Epochs"],
                 "finetuned_weights_to_load":None
-                }
+            }
 
     validation_loss_history_path = os.path.join(logs_folder,"val_loss_history.log")
     val_loss_fd = open(validation_loss_history_path,"w")
