@@ -29,7 +29,7 @@ from testing.testingUtils import testModel
 
 # return a fine-tuned version of the original resnet50 model
 # by default num_classes is = 1, since it's specified like that in the original code
-def fineTune(model, database, configuration):
+def fineTune(model, database, configuration, train_loss_fd,val_loss_fd):
     if configuration["num_classes"] < 2 :
         loss_fn = nn.BCEWithLogitsLoss()
     else:
@@ -64,23 +64,21 @@ def fineTune(model, database, configuration):
     required_epochs = configuration["epochs"] - checkpoint_epoch
 
     training_start = time.time()
-    training_loss_history,validation_loss_history = train_loop(model, database, loss_fn, optimizer, 
-                                                                    configuration['device'], 
-                                                                    required_epochs, 
-                                                                    configuration['perform_validation'], 
-                                                                    configuration['checkpoints_path_writing'])
+    train_loop(model, database, loss_fn, optimizer, 
+                configuration['device'], 
+                required_epochs, 
+                configuration['perform_validation'], 
+                configuration['checkpoints_path_writing'],
+                train_loss_fd,val_loss_fd)
     training_end = time.time()
 
     train_min = (training_end - training_start) // 60
     train_sec = (training_end - training_start) % 60
     print("Training duration: {:.0f} min and {:.0f} seconds".format(train_min,train_sec))
 
-    return model, training_loss_history, validation_loss_history
+    return model
 
-def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_validation,checkpoints_path):
-    val_loss_history = []
-    training_loss_history = []
-
+def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_validation,checkpoints_path, train_loss_fd,val_loss_fd):
     torch.backends.cudnn.benchmark = True
     torch.backends.cudnn.deterministic = True
 
@@ -170,10 +168,12 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
             print("Epoch loss in phase {} : {}".format(phase,epoch_loss))
 
             if phase == 'val':
-                val_loss_history.append(epoch_loss)
+                val_loss_fd.write("{} \n".format(epoch_loss))
+                val_loss_fd.flush()
             
             if phase == 'train':
-                training_loss_history.append(epoch_loss)
+                train_loss_fd.write("{} \n".format(epoch_loss))
+                train_loss_fd.flush()
         
         # print epoch duration and estimated time to finish
         epoch_end_time = time.time()
@@ -200,8 +200,6 @@ def train_loop(model, dataloader, loss_fn, optimizer, device, epochs, perform_va
         if remaining_epochs > 0:
             print('Estimated time to finish: {:.0f} minutes,{:.0f} seconds'.format(current_eta // 60,current_eta % 60))
             print('-' * 10)
-
-    return training_loss_history, val_loss_history
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -276,8 +274,8 @@ if __name__ == '__main__':
 
     # retrieve the data directly from the database, so we do not call the transform on the
     # sample just to read the label
-    real_images_count = 0
-    fake_images_count = 0
+    real_images_count = len(train_dataset.real_images)
+    fake_images_count = len(train_dataset.fake_images)
     # TODO: Fix real_images and fake_images count, since right now they do nothing
     print("TRAINING INFO")
     print(f"Using device {device_to_use}")
@@ -285,7 +283,7 @@ if __name__ == '__main__':
     print("Will train with {} images and test with {} images".format(len(databases['train']),len(databases['testing'])))
     print("Training dataset composition: \n {} samples labeled real \n {} samples labeled fake".format(real_images_count,fake_images_count))
     print(10*"=")
-    print("Training on images")
+    print("Training on")
     for filename in train_dataset.samples:
         print(filename)
     print(10*"=")
@@ -310,10 +308,16 @@ if __name__ == '__main__':
                 "finetuned_weights_to_load":None
                 }
 
+    validation_loss_history_path = os.path.join(logs_folder,"val_loss_history.log")
+    val_loss_fd = open(validation_loss_history_path,"w")
+
+    training_loss_history_path = os.path.join(logs_folder,"train_loss_history.log")
+    training_loss_fd = open(training_loss_history_path,"w")
+
     resnet_no_down_model = resnet50nodown(device_to_use, weights_path)
-    #print("Training started to test parameters on {}".format(datetime.datetime.now().strftime("%b %a %d at %H:%M:%S")))
-    fine_tuned_model, training_loss_history, validation_loss_history = fineTune(resnet_no_down_model,dataloaders,configuration)
-    #print("Training ended to test parameters on {}".format(datetime.datetime.now().strftime("%b %a %d at %H:%M:%S")))
+    print("Training started on {}".format(datetime.now().strftime("%b %a %d at %H:%M:%S")))
+    fine_tuned_model = fineTune(resnet_no_down_model,dataloaders,configuration,training_loss_fd,val_loss_fd)
+    print("Training ended on {}".format(datetime.now().strftime("%b %a %d at %H:%M:%S")))
 
     if settings_json["PerformTesting"] :
         testModel(fine_tuned_model,dataloaders,configuration['device'])
@@ -321,13 +325,3 @@ if __name__ == '__main__':
     print("Checkpoints are located at {}".format(checkpoints_path))
     print("Saving fine-tuned model (most recent checkpoint) in {}".format(finetuned_weights_path))
     save_model(fine_tuned_model.state_dict(), finetuned_weights_path)
-
-    validation_loss_history_path = os.path.join(logs_folder,"val_history.log")
-    with open(validation_loss_history_path,"w") as val_loss_file:
-        for el in validation_loss_history:
-            val_loss_file.write(str(el)+"\n")
-    
-    training_loss_history_path = os.path.join(logs_folder,"train_history.log")
-    with open(training_loss_history_path,"w") as train_loss_file:
-        for el in training_loss_history:
-            train_loss_file.write(str(el)+"\n")
