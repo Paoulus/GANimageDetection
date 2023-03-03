@@ -35,33 +35,31 @@ def fineTune(model, database, configuration, train_loss_fd,val_loss_fd):
     else:
         model = model.change_output(configuration['num_classes'])
         loss_fn = nn.CrossEntropyLoss()
-
     
-    if(configuration["finetuned_weights_to_load"] != None):
-        model.load_state_dict(torch.load("/home/paolo/Tesi Magistrale Materiale/Repos/GANimageDetection/logs/10_30_17_44_40/ft-weights-presocial.pth"))
-    
-    model = model.to(configuration['device'])
     optimizer = optim.Adam(model.parameters(), lr=configuration['learning_rate'])
 
-    checkpoint_epoch = 0
+    required_epochs = configuration["epochs"]
     if resume_from_checkpoint:
         checkpoint = torch.load(os.path.join(configuration['checkpoints_path_loading']))
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        checkpoint_epoch = checkpoint['epoch']
+        required_epochs -= checkpoint['epoch']
+    elif(configuration["finetuned_weights_to_load"] != None):
+        model.load_state_dict(torch.load(configuration["finetuned_weights_to_load"]))
 
+    model = model.to(configuration['device'])
+    
     for param in model.parameters():
         param.requires_grad = False;
 
     model.fc.requires_grad_(True)
 
     print("Learning rate is: {}".format(configuration["learning_rate"]))
-    print("Using {} epochs".format(configuration["epochs"]))
+    print("Using {} epochs".format(required_epochs))
     print("Training on parameters:")
     for name,param in model.named_parameters():
         if param.requires_grad == True:
             print("\t",name)
-    required_epochs = configuration["epochs"] - checkpoint_epoch
 
     training_start = time.time()
     train_loop(model, database, loss_fn, optimizer, 
