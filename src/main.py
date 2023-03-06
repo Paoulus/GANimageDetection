@@ -338,6 +338,12 @@ if __name__ == '__main__':
     fine_tuned_model = fineTune(resnet_no_down_model,dataloaders,configuration,training_loss_fd,val_loss_fd)
     print("Training ended on {}".format(datetime.now().strftime("%b %a %d at %H:%M:%S")))
 
+    if settings_json["exportToONNX"]:
+        exporting_image, label = iter(dataloaders["testing"]).next()
+
+        #produce exportable rappresentation of the model, for visualization or other processing
+        torch.onnx.export(fine_tuned_model,exporting_image,"../exported_model.onnx")
+
     if settings_json["PerformTesting"] :
         testModel(fine_tuned_model,dataloaders,configuration['device'])
 
