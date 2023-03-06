@@ -236,10 +236,10 @@ if __name__ == '__main__':
 
     weights_path = script_arguments.weights_path
     device_to_use = script_arguments.device_to_use
-    input_folder = settings_json["DatasetPath"]
-    resume_from_checkpoint = settings_json["LoadCheckpoint"]
-    batch_size = settings_json["BatchSize"]
-    logs_base_path = settings_json["LogsPath"]
+    input_folder = settings_json["datasetPath"]
+    resume_from_checkpoint = settings_json["loadCheckpoint"]
+    batch_size = settings_json["batchSize"]
+    logs_base_path = settings_json["logsPath"]
     finetuned_weights_filename = settings_json["finetunedWeightsFilename"]
 
     # generate folder names and paths for the current execution report folder
@@ -260,8 +260,8 @@ if __name__ == '__main__':
     ])
 
     total_dataset = TuningDatabaseWithRandomSampling(input_folder,transform_convert_and_normalize,seed=13776321,
-                                                        real_amount=settings_json["RealSamplesAmount"],
-                                                        fake_amount=settings_json["FakeSamplesAmount"])
+                                                        real_amount=settings_json["realSamplesAmount"],
+                                                        fake_amount=settings_json["fakeSamplesAmount"])
 
     for path,_ in total_dataset.samples:
         print(path)
@@ -313,17 +313,17 @@ if __name__ == '__main__':
     for path,label in databases["testing"].samples:
         print(path)
 
-    settings_json_checkpoint_path = settings_json["CheckpointPath"]
+    settings_json_checkpoint_path = settings_json["checkpointPath"]
 
     configuration = {
                 "checkpoints_path_loading":settings_json_checkpoint_path,
                 "checkpoints_path_writing":checkpoints_path,
-                "num_classes":settings_json["Classes"],
+                "num_classes":settings_json["classes"],
                 "device":device_to_use,
-                "perform_validation":settings_json["PerformValidation"],
-                "perform_testing":settings_json["PerformTesting"],
-                "learning_rate":settings_json["LearningRate"],
-                "epochs":settings_json["Epochs"],
+                "perform_validation":settings_json["performValidation"],
+                "perform_testing":settings_json["performTesting"],
+                "learning_rate":settings_json["learningRate"],
+                "epochs":settings_json["epochs"],
                 "finetuned_weights_to_load":None
             }
 
@@ -344,7 +344,7 @@ if __name__ == '__main__':
         #produce exportable rappresentation of the model, for visualization or other processing
         torch.onnx.export(fine_tuned_model,exporting_image,"../exported_model.onnx")
 
-    if settings_json["PerformTesting"] :
+    if settings_json["performTesting"] :
         testModel(fine_tuned_model,dataloaders,configuration['device'])
 
     print("Checkpoints are located at {}".format(checkpoints_path))
