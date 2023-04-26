@@ -87,9 +87,9 @@ class TuningDatabaseWithRandomSampling(datasets.DatasetFolder):
                     files_in_folder = []
                     for root, dirs, files in os.walk(data_folder, topdown=True):
                         dirs[:] = [d for d in dirs if d not in exclude]
-                        self.downsamplervariable += 0
+                        self.downsamplervariable += 1
                         for file in sorted(files):
-                            if (file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg")):
+                            if (file.endswith(".png") or file.endswith(".jpg") or file.endswith(".jpeg") and (self.downsamplervariable % 5 == 0)):
                                 item = os.path.join(root, file), 1
                                 files_in_folder.append(item)
                                 self.fake_images_count += 1
