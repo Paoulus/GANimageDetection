@@ -27,8 +27,7 @@ if __name__ == '__main__':
 						help='weights path of the network')
 
 	script_args = parser.parse_args()
-	postsocial_dir = "/home/paolochiste/postsocial-samples/Samples/"
-	data_dir = "/media/mmlab/c73e5e73-45ea-4b43-8dbb-cebfdacf033d/truebees/forensicsDatasets"
+	postsocial_dir = "postsocial-samples/Samples/"
 	weights_path = script_args.weights_path
 
 	starting_model = resnet50nodown(device, weights_path)

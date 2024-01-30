@@ -1,0 +1,18 @@
+{
+    "datasetPath":"",
+    "loadCheckpoint":"",
+    "checkpointPath":"",
+    "batchSize":"",
+    "logsPath":"",
+    "finetunedWeightsFilename":"",
+    "realSamplesAmount":"",
+    "fakeSamplesAmount":"",
+    "testDatasetCatalogue":"",
+    "validationDatasetCatalogue":"",
+    "classes":2,
+    "performValidation":false,
+    "performTesting":false,
+    "learningRate":0.01,
+    "epochs":30,
+    "exportToONNX":false
+}
